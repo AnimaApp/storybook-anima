@@ -1,7 +1,7 @@
 {
   "name": "storybook-anima",
   "version": "1.0.1",
-  "description": "A barebones Storybook addon",
+  "description": "A Storybook addon for Anima",
   "main": "dist/preset.js",
   "files": [
     "dist/**/*",
@@ -15,43 +15,29 @@
   "author": "YourUsername",
   "license": "MIT",
   "dependencies": {
-    "@babel/cli": "^7.16.8",
     "@emotion/react": "^11.7.1",
     "@emotion/server": "^11.4.0",
     "@emotion/styled": "^11.6.0",
     "@mui/icons-material": "^5.3.0",
     "@mui/material": "^5.3.0",
-    "@storybook/addon-storysource": "^6.4.14",
     "@storybook/addons": "^6.4.14",
     "@storybook/source-loader": "^6.4.14",
-    "add": "^2.0.6",
-    "antd": "^4.18.4",
-    "html-minifier": "^4.0.0",
     "pako": "^2.0.4",
     "react": "^17.0.2",
-    "react-dom": "^17.0.2",
-    "react-syntax-highlighter": "^15.4.5",
-    "yarn": "^1.22.17"
+    "react-dom": "^17.0.2"
   },
   "peerDependencies": {
     "@storybook/addon-essentials": ">= 6.4.13",
     "@storybook/react": ">= 6.4.13"
   },
   "devDependencies": {
-    "@babel/core": "^7.16.12",
-    "@babel/plugin-proposal-class-properties": "^7.16.7",
-    "@babel/preset-env": "^7.16.11",
-    "@babel/preset-react": "^7.16.7",
     "@storybook/addon-actions": "^6.4.13",
     "@storybook/addon-essentials": "^6.4.13",
-    "@storybook/addon-links": "^6.4.13",
     "@storybook/react": "^6.4.13",
     "@types/react-dom": "^17.0.11",
-    "babel-loader": "^8.2.3",
     "rollup": "^2.64.0",
     "rollup-plugin-copy-glob": "^0.3.2",
     "rollup-plugin-delete": "^2.0.0",
-    "rollup-plugin-import-css": "^3.0.2",
     "rollup-plugin-peer-deps-external": "^2.2.4",
     "rollup-plugin-typescript2": "^0.31.1",
     "typescript": "^4.5.4"

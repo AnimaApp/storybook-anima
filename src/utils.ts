@@ -46,3 +46,28 @@ export const downloadAsJSON = (data: Record<string, any>) => {
   link.click();
   document.body.removeChild(link);
 };
+
+export const extractCSS = () => {
+  return Array.from(document.head.getElementsByTagName("style"))
+    .map((style) => style.innerHTML)
+    .join("");
+};
+
+export const buildPage = (html: string, css: string) => {
+  return `
+      <!DOCTYPE html>
+      <html lang="en">
+        <head>
+          <title>Preview</title>
+          <style>
+            ${css}
+          </style>
+          <meta name="viewport" content="initial-scale=1, width=device-width" />
+        </head>
+        <body>
+          <script async src="build/bundle.js"></script>
+          <div id="root">${html}</div>
+        </body>
+      </html>
+    `;
+};

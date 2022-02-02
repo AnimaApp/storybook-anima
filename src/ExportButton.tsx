@@ -3,23 +3,15 @@ import { IconButton } from "@storybook/components";
 
 import { API, useChannel } from "@storybook/api";
 import pako from "pako";
-import {
-  createElementFromHTML,
-  downloadAsJSON,
-  getCurrentCanvasHTML,
-  notify,
-} from "./utils";
-import { ADDON_ID, API_BASE, EVENT_CODE_RECEIVED } from "./constants";
+import { createElementFromHTML, downloadAsJSON, notify } from "./utils";
+import { API_BASE, EVENT_CODE_RECEIVED } from "./constants";
 
 interface SProps {
   api: API;
 }
 
-const doExport = async (_api: API) => {
+const doExport = async (_api: API, HTML: string) => {
   try {
-    console.log(_api.getAddonState(ADDON_ID));
-    const HTML = getCurrentCanvasHTML();
-
     if (HTML) {
       const request = async () => {
         const gzippedBody = pako.gzip(JSON.stringify({ html: HTML }));
@@ -37,7 +29,6 @@ const doExport = async (_api: API) => {
           });
       };
       const json = await request();
-      console.log(json);
       downloadAsJSON(json);
       notify("Component exported successfully");
     }
@@ -50,10 +41,11 @@ const doExport = async (_api: API) => {
 
 export const ExportButton: React.FC<SProps> = ({ api }) => {
   const [isExporting, setIsExporting] = useState(false);
+  const [HTML, setHTML] = useState("");
 
   useChannel({
     [EVENT_CODE_RECEIVED]: ({ html }) => {
-      console.log(html);
+      setHTML(html);
     },
   });
 
@@ -64,6 +56,23 @@ export const ExportButton: React.FC<SProps> = ({ api }) => {
         createElementFromHTML(
           `<link href="https://fonts.googleapis.com/css2?family=Inter&display=swap" rel="stylesheet">`
         )
+      ) &&
+      document.head.appendChild(
+        createElementFromHTML(
+          `<style>
+          .spin{
+            animation: spin 200ms linear infinite;
+          }
+          @keyframes spin {
+            from {
+                transform:rotate(0deg);
+            }
+            to {
+                transform:rotate(360deg);
+            }
+        }
+          </style>`
+        )
       );
 
     return () => {};
@@ -72,14 +81,25 @@ export const ExportButton: React.FC<SProps> = ({ api }) => {
   return (
     <IconButton
       active={false}
-      title="Export to Figmass"
+      title="Export to Anima"
       onClick={async () => {
         setIsExporting(true);
-        await doExport(api);
+        await doExport(api, HTML);
         setIsExporting(false);
       }}
     >
-      {isExporting ? null : (
+      {isExporting ? (
+        <svg
+          className="spin"
+          xmlns="http://www.w3.org/2000/svg"
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="#999999"
+        >
+          <path d="M12 22c5.421 0 10-4.579 10-10h-2c0 4.337-3.663 8-8 8s-8-3.663-8-8c0-4.336 3.663-8 8-8V2C6.579 2 2 6.58 2 12c0 5.421 4.579 10 10 10z"></path>
+        </svg>
+      ) : (
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 32 32">
           <rect width="32" height="32" fill="#3B3B3B" rx="4" />
           <path
