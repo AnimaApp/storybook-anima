@@ -49,14 +49,17 @@ export const downloadAsJSON = (data: Record<string, any>) => {
 
 export const extractCSS = () => {
   return (
-    Array.from(document.head.getElementsByTagName("style"))
+    Array.from(document.querySelectorAll("style"))
+      .filter((el) => !el.hasAttribute("data-emotion"))
       .map((style) => style.innerHTML)
-      .join("") +
+      .join(" ") +
     Array.from(document.querySelectorAll("[data-emotion]"))
       .flatMap(({ sheet }: any) =>
         [...sheet.cssRules].map((rules) => rules.cssText)
       )
-      .join("\n")
+      .join(" ")
+      .replace(/\\n/g, " ")
+      .trim()
   );
 
   // fix for components that use emotion-css
