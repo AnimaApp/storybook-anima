@@ -17,8 +17,6 @@ export const withHTML = makeDecorator({
         previewHTML = previewHTML.replace(/<!--\s*-->/g, "");
       }
       const html = buildPage(previewHTML, css);
-      console.log(css);
-      console.log(html);
       channel.emit(EVENT_CODE_RECEIVED, { html, options: parameters });
     }, 0);
     return storyFn(context);
