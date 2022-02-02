@@ -1,5 +1,5 @@
 import { css } from "@storybook/theming";
-import { createElementFromHTML } from "./utils";
+import { createElementFromHTML } from "../utils";
 
 export const createAlert = (text: string): HTMLElement => {
   const htmlTemplate = `
@@ -13,7 +13,7 @@ export const createAlert = (text: string): HTMLElement => {
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 20px 0;
+      padding-top: 12px;
     `.styles
   }">
   <div style="${
@@ -65,7 +65,7 @@ export const createAlert = (text: string): HTMLElement => {
           css`
             line-height: 24px;
             color: #fff;
-            font-size: 14px;
+            font-size: 13px;
             font-family: Inter, sans-serif;
           `.styles
         }" >${text}</span>

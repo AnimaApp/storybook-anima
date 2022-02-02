@@ -1,7 +1,32 @@
+import { createAlert } from "./components/alert";
+
 export const createElementFromHTML = (htmlString: string): HTMLElement => {
   const div = document.createElement("div");
   div.innerHTML = htmlString.trim();
   return div.firstElementChild as HTMLElement;
+};
+
+export const getCurrentCanvasHTML = (): string => {
+  const el = document.querySelector(
+    "#storybook-preview-iframe"
+  ) as HTMLIFrameElement | null;
+
+  if (!el) return null;
+  return el.contentWindow.document.documentElement.outerHTML;
+};
+
+export const notify = (text: string): void => {
+  const alertElement = createAlert(text);
+  document.body.appendChild(alertElement);
+
+  (alertElement.firstElementChild as HTMLElement).style.opacity = "1";
+
+  setTimeout(() => {
+    (alertElement.firstElementChild as HTMLElement).style.opacity = "0";
+    requestAnimationFrame(() => {
+      alertElement.remove();
+    });
+  }, 2000);
 };
 
 export const downloadAsJSON = (data: Record<string, any>) => {
