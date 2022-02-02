@@ -48,9 +48,18 @@ export const downloadAsJSON = (data: Record<string, any>) => {
 };
 
 export const extractCSS = () => {
-  return Array.from(document.head.getElementsByTagName("style"))
-    .map((style) => style.innerHTML)
-    .join("");
+  return (
+    Array.from(document.head.getElementsByTagName("style"))
+      .map((style) => style.innerHTML)
+      .join("") +
+    Array.from(document.querySelectorAll("[data-emotion]"))
+      .flatMap(({ sheet }: any) =>
+        [...sheet.cssRules].map((rules) => rules.cssText)
+      )
+      .join("\n")
+  );
+
+  // fix for components that use emotion-css
 };
 
 export const buildPage = (html: string, css: string) => {
