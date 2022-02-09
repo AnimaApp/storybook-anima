@@ -43,7 +43,10 @@ module.exports = {
 ```
 ### 3. Set Anima access token
 
-You can set the access token as an environment variable called `STORYBOOK_ANIMA_TOKEN`.
+First get the access token from the Anima Figma plugin, or in your Anima team settings. Learn more about [how to get the token from Anima](https://animaapp.com).
+
+You can then set the access token as an environment variable called `STORYBOOK_ANIMA_TOKEN`.
+
 You can create `.env` file in your project's root folder, or you can provide the environment variable as a command line parameter when building or dynamically running Storybook.
 
 
