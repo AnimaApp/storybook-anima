@@ -1,15 +1,13 @@
 <div align="center">
 
-  <img src="" width="280" alt="Anima Storybook Addon"/>
   <br/>
+  <img src="https://user-images.githubusercontent.com/1323193/153215858-dc6b4ac3-411a-4cf0-8e56-b4460ee339d7.svg" width="280" alt="Storybook to Anima to Figma Addon"/>
   <br/>
+  <h1>Storybook Anima addon</h1>
 
+  <br/>
 
 </div>
-
-<hr/>
-
-## Storybook Anima addon
 
 [Storybook](https://github.com/storybooks/storybook) addon that extracts the Storybook data and transforms stories into Figma components for a better design-development workflow.
 
