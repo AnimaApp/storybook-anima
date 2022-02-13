@@ -1,6 +1,6 @@
 import { addons, makeDecorator } from "@storybook/addons";
 import { EVENT_CODE_RECEIVED } from "../constants";
-import { buildPage, extractCSS } from "../utils";
+import { extractCSS } from "../utils";
 
 export const withHTML = makeDecorator({
   name: "withHTML",
@@ -12,12 +12,11 @@ export const withHTML = makeDecorator({
       const rootSelector = parameters.root || "#root";
       const root = document.querySelector(rootSelector);
       const css = extractCSS();
-      let previewHTML = root ? root.innerHTML : `${rootSelector} not found.`;
+      let html = root ? root.innerHTML : `${rootSelector} not found.`;
       if (parameters.removeEmptyComments) {
-        previewHTML = previewHTML.replace(/<!--\s*-->/g, "");
+        html = html.replace(/<!--\s*-->/g, "");
       }
-      const html = buildPage(previewHTML, css);
-      channel.emit(EVENT_CODE_RECEIVED, { html, options: parameters });
+      channel.emit(EVENT_CODE_RECEIVED, { html, css, options: parameters });
     }, 0);
     return storyFn(context);
   },

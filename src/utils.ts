@@ -1,4 +1,5 @@
 import { createAlert } from "./components/alert";
+import { API_URL } from "./constants";
 
 export const createElementFromHTML = (htmlString: string): HTMLElement => {
   const div = document.createElement("div");
@@ -82,4 +83,35 @@ export const buildPage = (html: string, css: string) => {
         </body>
       </html>
     `;
+};
+
+export const authenticate = async (storybookToken: string) => {
+  if (!storybookToken) return false;
+  try {
+    const res = await fetch(`${API_URL}/auth/storybook`, {
+      method: "GET",
+      headers: {
+        AUTH_TOKEN: storybookToken,
+      },
+    });
+    return res.status === 200;
+  } catch (error) {
+    console.log(error);
+    return false;
+  }
+};
+export const createStoryRequest = async (
+  storybookToken: string,
+  html: string,
+  css: string
+) => {
+  if (!storybookToken) return false;
+  return fetch(`${API_URL}/stories`, {
+    method: "POST",
+    headers: {
+      AUTH_TOKEN: storybookToken,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ html, css }),
+  });
 };

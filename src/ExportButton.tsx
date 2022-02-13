@@ -2,34 +2,45 @@ import React, { useEffect, useState } from "react";
 import { IconButton } from "@storybook/components";
 
 import { API, useChannel } from "@storybook/api";
-import pako from "pako";
-import { createElementFromHTML, downloadAsJSON, notify } from "./utils";
-import { API_BASE, EVENT_CODE_RECEIVED } from "./constants";
+import { createElementFromHTML, createStoryRequest, notify } from "./utils";
+import { ANIMA_TOKEN, EVENT_CODE_RECEIVED } from "./constants";
 
 interface SProps {
   api: API;
 }
 
-const doExport = async (_api: API, HTML: string) => {
+// const doExport = async (_api: API, HTML: string) => {
+//   try {
+//     if (HTML) {
+//       const request = async () => {
+//         const gzippedBody = pako.gzip(JSON.stringify({ html: HTML }));
+//         return fetch(API_BASE + "/p", {
+//           method: "POST",
+//           headers: {
+//             "Content-Encoding": "gzip",
+//             "Content-Type": "application/json",
+//           },
+//           body: gzippedBody,
+//         })
+//           .then((response) => response.json())
+//           .then((json) => {
+//             return json;
+//           });
+//       };
+//       const json = await request();
+//       downloadAsJSON(json);
+//       notify("Component exported successfully");
+//     }
+//   } catch (error) {
+//     console.log(error);
+//   } finally {
+//     return true;
+//   }
+// };
+const createStory = async (HTML: string, CSS: string) => {
   try {
     if (HTML) {
-      const request = async () => {
-        const gzippedBody = pako.gzip(JSON.stringify({ html: HTML }));
-        return fetch(API_BASE + "/p", {
-          method: "POST",
-          headers: {
-            "Content-Encoding": "gzip",
-            "Content-Type": "application/json",
-          },
-          body: gzippedBody,
-        })
-          .then((response) => response.json())
-          .then((json) => {
-            return json;
-          });
-      };
-      const json = await request();
-      downloadAsJSON(json);
+      await createStoryRequest(ANIMA_TOKEN, HTML, CSS);
       notify("Component exported successfully");
     }
   } catch (error) {
@@ -39,13 +50,19 @@ const doExport = async (_api: API, HTML: string) => {
   }
 };
 
-export const ExportButton: React.FC<SProps> = ({ api }) => {
+export const ExportButton: React.FC<SProps> = () => {
   const [isExporting, setIsExporting] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [HTML, setHTML] = useState("");
+  const [CSS, setCSS] = useState("");
 
   useChannel({
-    [EVENT_CODE_RECEIVED]: ({ html }) => {
+    [EVENT_CODE_RECEIVED]: ({ html, css }) => {
       setHTML(html);
+      setCSS(css);
+    },
+    ["AUTH"]: (authState) => {
+      setIsAuthenticated(authState);
     },
   });
 
@@ -80,11 +97,10 @@ export const ExportButton: React.FC<SProps> = ({ api }) => {
 
   return (
     <IconButton
-      active={false}
-      title="Export to Anima"
+      title={isAuthenticated ? "Export to Anima" : "Authenticate to export"}
       onClick={async () => {
         setIsExporting(true);
-        await doExport(api, HTML);
+        await createStory(HTML, CSS);
         setIsExporting(false);
       }}
     >
@@ -100,7 +116,12 @@ export const ExportButton: React.FC<SProps> = ({ api }) => {
           <path d="M12 22c5.421 0 10-4.579 10-10h-2c0 4.337-3.663 8-8 8s-8-3.663-8-8c0-4.336 3.663-8 8-8V2C6.579 2 2 6.58 2 12c0 5.421 4.579 10 10 10z"></path>
         </svg>
       ) : (
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 32 32">
+        <svg
+          style={{ ...(!isAuthenticated ? { filter: "grayscale(1)" } : {}) }}
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 32 32"
+        >
           <rect width="32" height="32" fill="#3B3B3B" rx="4" />
           <path
             fill="#FF6250"
