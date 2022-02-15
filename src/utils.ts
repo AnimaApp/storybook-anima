@@ -7,15 +7,6 @@ export const createElementFromHTML = (htmlString: string): HTMLElement => {
   return div.firstElementChild as HTMLElement;
 };
 
-export const getCurrentCanvasHTML = (): string => {
-  const el = document.querySelector(
-    "#storybook-preview-iframe"
-  ) as HTMLIFrameElement | null;
-
-  if (!el) return null;
-  return el.contentWindow.document.documentElement.outerHTML;
-};
-
 export const notify = (text: string): void => {
   const alertElement = createAlert(text);
   document.body.appendChild(alertElement);
@@ -27,7 +18,7 @@ export const notify = (text: string): void => {
     requestAnimationFrame(() => {
       alertElement.remove();
     });
-  }, 2000);
+  }, 2500);
 };
 
 export const downloadAsJSON = (data: Record<string, any>) => {
@@ -62,27 +53,6 @@ export const extractCSS = () => {
       .replace(/\\n/g, " ")
       .trim()
   );
-
-  // fix for components that use emotion-css
-};
-
-export const buildPage = (html: string, css: string) => {
-  return `
-      <!DOCTYPE html>
-      <html lang="en">
-        <head>
-          <title>Preview</title>
-          <style>
-            ${css}
-          </style>
-          <meta name="viewport" content="initial-scale=1, width=device-width" />
-        </head>
-        <body>
-          <script async src="build/bundle.js"></script>
-          <div id="root">${html}</div>
-        </body>
-      </html>
-    `;
 };
 
 export const authenticate = async (storybookToken: string) => {
@@ -102,10 +72,7 @@ export const authenticate = async (storybookToken: string) => {
 };
 export const createStoryRequest = async (
   storybookToken: string,
-  html: string,
-  css: string,
-  width: number,
-  height: number
+  ...payload: any
 ) => {
   if (!storybookToken) return false;
   return fetch(`${API_URL}/stories`, {
@@ -114,6 +81,6 @@ export const createStoryRequest = async (
       AUTH_TOKEN: storybookToken,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ html, css, width, height }),
+    body: JSON.stringify(payload),
   });
 };

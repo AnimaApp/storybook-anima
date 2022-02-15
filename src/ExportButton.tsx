@@ -3,40 +3,11 @@ import { IconButton } from "@storybook/components";
 
 import { API, useChannel } from "@storybook/api";
 import { createElementFromHTML, createStoryRequest, notify } from "./utils";
-import { ANIMA_TOKEN, EVENT_CODE_RECEIVED } from "./constants";
+import { STORYBOOK_ANIMA_TOKEN, EVENT_CODE_RECEIVED } from "./constants";
 
 interface SProps {
   api: API;
 }
-
-// const doExport = async (_api: API, HTML: string) => {
-//   try {
-//     if (HTML) {
-//       const request = async () => {
-//         const gzippedBody = pako.gzip(JSON.stringify({ html: HTML }));
-//         return fetch(API_BASE + "/p", {
-//           method: "POST",
-//           headers: {
-//             "Content-Encoding": "gzip",
-//             "Content-Type": "application/json",
-//           },
-//           body: gzippedBody,
-//         })
-//           .then((response) => response.json())
-//           .then((json) => {
-//             return json;
-//           });
-//       };
-//       const json = await request();
-//       downloadAsJSON(json);
-//       notify("Component exported successfully");
-//     }
-//   } catch (error) {
-//     console.log(error);
-//   } finally {
-//     return true;
-//   }
-// };
 
 interface StoryData {
   html: string;
@@ -48,8 +19,8 @@ interface StoryData {
 const createStory = async (data: StoryData) => {
   try {
     const { css, height, html, width } = data;
-    await createStoryRequest(ANIMA_TOKEN, html, css, width, height);
-    notify("Component exported successfully");
+    await createStoryRequest(STORYBOOK_ANIMA_TOKEN, html, css, width, height);
+    notify("Story synced successfully");
   } catch (error) {
     console.log(error);
   } finally {
