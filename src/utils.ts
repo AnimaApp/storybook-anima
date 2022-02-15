@@ -103,7 +103,9 @@ export const authenticate = async (storybookToken: string) => {
 export const createStoryRequest = async (
   storybookToken: string,
   html: string,
-  css: string
+  css: string,
+  width: number,
+  height: number
 ) => {
   if (!storybookToken) return false;
   return fetch(`${API_URL}/stories`, {
@@ -112,6 +114,6 @@ export const createStoryRequest = async (
       AUTH_TOKEN: storybookToken,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ html, css }),
+    body: JSON.stringify({ html, css, width, height }),
   });
 };

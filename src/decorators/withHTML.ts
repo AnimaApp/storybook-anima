@@ -10,13 +10,33 @@ export const withHTML = makeDecorator({
     setTimeout(() => {
       const channel = addons.getChannel();
       const rootSelector = parameters.root || "#root";
-      const root = document.querySelector(rootSelector);
+      const root = document.querySelector(rootSelector) as HTMLElement | null;
       const css = extractCSS();
       let html = root ? root.innerHTML : `${rootSelector} not found.`;
       if (parameters.removeEmptyComments) {
         html = html.replace(/<!--\s*-->/g, "");
       }
-      channel.emit(EVENT_CODE_RECEIVED, { html, css, options: parameters });
+
+      let width = 0,
+        height = 0;
+
+      if (root) {
+        let rootClone = root.cloneNode(true) as HTMLElement;
+        rootClone.style.width = "fit-content";
+        document.body.appendChild(rootClone);
+        const rect = rootClone.getBoundingClientRect();
+        width = rect.width;
+        height = rect.height;
+        rootClone.remove();
+      }
+
+      channel.emit(EVENT_CODE_RECEIVED, {
+        html,
+        css,
+        width,
+        height,
+        options: parameters,
+      });
     }, 0);
     return storyFn(context);
   },

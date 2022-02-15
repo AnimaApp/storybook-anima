@@ -37,12 +37,19 @@ interface SProps {
 //     return true;
 //   }
 // };
-const createStory = async (HTML: string, CSS: string) => {
+
+interface StoryData {
+  html: string;
+  css: string;
+  width: number;
+  height: number;
+}
+
+const createStory = async (data: StoryData) => {
   try {
-    if (HTML) {
-      await createStoryRequest(ANIMA_TOKEN, HTML, CSS);
-      notify("Component exported successfully");
-    }
+    const { css, height, html, width } = data;
+    await createStoryRequest(ANIMA_TOKEN, html, css, width, height);
+    notify("Component exported successfully");
   } catch (error) {
     console.log(error);
   } finally {
@@ -53,13 +60,16 @@ const createStory = async (HTML: string, CSS: string) => {
 export const ExportButton: React.FC<SProps> = () => {
   const [isExporting, setIsExporting] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [HTML, setHTML] = useState("");
-  const [CSS, setCSS] = useState("");
+  const [storyData, setStoryData] = useState<StoryData>({
+    css: "",
+    html: "",
+    width: 0,
+    height: 0,
+  });
 
   useChannel({
-    [EVENT_CODE_RECEIVED]: ({ html, css }) => {
-      setHTML(html);
-      setCSS(css);
+    [EVENT_CODE_RECEIVED]: (data) => {
+      setStoryData(data);
     },
     ["AUTH"]: (authState) => {
       setIsAuthenticated(authState);
@@ -100,7 +110,7 @@ export const ExportButton: React.FC<SProps> = () => {
       title={isAuthenticated ? "Export to Anima" : "Authenticate to export"}
       onClick={async () => {
         setIsExporting(true);
-        await createStory(HTML, CSS);
+        await createStory(storyData);
         setIsExporting(false);
       }}
     >
