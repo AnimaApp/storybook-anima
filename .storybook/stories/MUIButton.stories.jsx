@@ -2,7 +2,7 @@ import React from 'react';
 import { MUIButton } from './MUIButton';
 
 export default {
-  title: 'Example/MUIButton',
+  title: 'Example/MUI Button',
   component: MUIButton,
   argTypes: {
     variant: { control: { type: 'select', options: ['text', 'outlined', 'contained'] } },
@@ -14,8 +14,8 @@ export default {
 
 const Template = (args) => <MUIButton {...args} />;
 
-export const contained = Template.bind({});
-contained.args = {
+export const Button = Template.bind({});
+Button.args = {
   label: 'Button',
   variant: 'contained',
   color: 'primary',

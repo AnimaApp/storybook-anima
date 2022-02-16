@@ -3,21 +3,17 @@ import { default as Component } from '@mui/material/Checkbox';
 
 
 export default {
-  title: 'Example/MUICheckbox',
+  title: 'Example/MUI Checkbox',
   component: Component,
   argTypes: {
     checked: { control: 'boolean' },
   },
-
-
-
 };
 
 const Template = (args) => <Component {...args} />;
+export const Checkbox = Template.bind({});
 
-export const checked = Template.bind({});
-
-checked.args = {
+Checkbox.args = {
   checked: true,
 };
 

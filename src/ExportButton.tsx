@@ -1,8 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { IconButton } from "@storybook/components";
 
-import { API, useChannel } from "@storybook/api";
-import { createElementFromHTML, createStoryRequest, notify } from "./utils";
+import { API, useChannel, useStorybookApi, Story } from "@storybook/api";
+import {
+  createElementFromHTML,
+  createStoryRequest,
+  getStoryNameFromArgs,
+  notify,
+} from "./utils";
 import { STORYBOOK_ANIMA_TOKEN, EVENT_CODE_RECEIVED } from "./constants";
 
 interface SProps {
@@ -16,13 +21,22 @@ interface StoryData {
   height: number;
 }
 
-const createStory = async (data: StoryData) => {
+const createStory = async (story: Story, data: StoryData) => {
   try {
     const { css, height, html, width } = data;
-    await createStoryRequest(STORYBOOK_ANIMA_TOKEN, html, css, width, height);
+    const name = getStoryNameFromArgs(story.name, story.args);
+    await createStoryRequest(
+      STORYBOOK_ANIMA_TOKEN,
+      html,
+      css,
+      width,
+      height,
+      name
+    );
     notify("Story synced successfully");
   } catch (error) {
     console.log(error);
+    return error;
   } finally {
     return true;
   }
@@ -76,12 +90,15 @@ export const ExportButton: React.FC<SProps> = () => {
     return () => {};
   }, []);
 
+  const api = useStorybookApi();
+  const story = api.getCurrentStoryData() as Story;
+
   return (
     <IconButton
       title={isAuthenticated ? "Export to Anima" : "Authenticate to export"}
       onClick={async () => {
         setIsExporting(true);
-        await createStory(storyData);
+        await createStory(story, storyData);
         setIsExporting(false);
       }}
     >

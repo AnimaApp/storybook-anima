@@ -1,5 +1,16 @@
+import { Args } from "@storybook/api";
 import { createAlert } from "./components/alert";
 import { API_URL } from "./constants";
+
+export const isString = (value: any) =>
+  Object.prototype.toString.call(value) === "[object String]";
+
+export const isBoolean = (val) => "boolean" === typeof val;
+
+export const capitalize = (s: string) => {
+  if (!isString(s)) return "";
+  return s.charAt(0).toUpperCase() + s.slice(1);
+};
 
 export const createElementFromHTML = (htmlString: string): HTMLElement => {
   const div = document.createElement("div");
@@ -72,7 +83,11 @@ export const authenticate = async (storybookToken: string) => {
 };
 export const createStoryRequest = async (
   storybookToken: string,
-  ...payload: any
+  html: string,
+  css: string,
+  width: number,
+  height: number,
+  name: string
 ) => {
   if (!storybookToken) return false;
   return fetch(`${API_URL}/stories`, {
@@ -81,6 +96,33 @@ export const createStoryRequest = async (
       AUTH_TOKEN: storybookToken,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify(payload),
+    body: JSON.stringify({ html, css, width, height, name }),
   });
+};
+
+export const getStoryNameFromArgs = (storyName: string, args: Args) => {
+  const defaultName = capitalize(storyName);
+  let name = `${defaultName}`;
+  const addedArgs = [defaultName];
+
+  const addArg = (s: string) => {
+    if (addedArgs.includes(s)) return;
+    name += ` / ${capitalize(s)}`;
+    addedArgs.push(s);
+  };
+
+  const keys = Object.keys(args);
+  for (let i = 0; i < keys.length; i++) {
+    if (addedArgs.length > 5) break; // max of 5 args per name
+    const key = keys[i];
+    const value = args[key];
+    if (isString(value)) {
+      addArg(value);
+    }
+    if (isBoolean(value) && value) {
+      addArg(key);
+    }
+  }
+
+  return name;
 };
