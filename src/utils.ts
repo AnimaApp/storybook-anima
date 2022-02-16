@@ -72,7 +72,7 @@ export const authenticate = async (storybookToken: string) => {
     const res = await fetch(`${API_URL}/auth/storybook`, {
       method: "GET",
       headers: {
-        AUTH_TOKEN: storybookToken,
+        'storybook_auth_token': storybookToken,
       },
     });
     return res.status === 200;
@@ -93,7 +93,7 @@ export const createStoryRequest = async (
   return fetch(`${API_URL}/stories`, {
     method: "POST",
     headers: {
-      AUTH_TOKEN: storybookToken,
+      'storybook_auth_token': storybookToken,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({ html, css, width, height, name }),
