@@ -69,11 +69,12 @@ export const extractCSS = () => {
 export const authenticate = async (storybookToken: string) => {
   if (!storybookToken) return false;
   try {
-    const res = await fetch(`${API_URL}/auth/storybook`, {
-      method: "GET",
+    const res = await fetch(`${API_URL}/storybook_token/validate`, {
+      method: "POST",
       headers: {
-        'storybook_auth_token': storybookToken,
+        "Content-Type": "application/json",
       },
+      body: JSON.stringify({ storybook_auth_token: storybookToken }),
     });
     return res.status === 200;
   } catch (error) {
@@ -93,10 +94,17 @@ export const createStoryRequest = async (
   return fetch(`${API_URL}/stories`, {
     method: "POST",
     headers: {
-      'storybook_auth_token': storybookToken,
+      storybook_auth_token: storybookToken,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ html, css, width, height, name }),
+    body: JSON.stringify({
+      html,
+      css,
+      width,
+      height,
+      name,
+      storybook_auth_token: storybookToken,
+    }),
   });
 };
 
