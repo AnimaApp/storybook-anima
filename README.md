@@ -66,4 +66,4 @@ For more information visit : [Anima Storybook integration](https://animaapp.com)
 
 ## License
 
-MIT © [Moez Bouaggad](https://animaapp.com)
+MIT © [Anima](https://www.animaapp.com)
