@@ -15,8 +15,6 @@
 
 ## Links
 
-Add links here
-
 ## Requirements
 
 -   Storybook@>=6.0.0
