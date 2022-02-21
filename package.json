@@ -12,7 +12,7 @@
     "storybook",
     "addons"
   ],
-  "author": "YourUsername",
+  "author": "Anima",
   "license": "MIT",
   "dependencies": {
     "@emotion/react": "^11.7.1",
