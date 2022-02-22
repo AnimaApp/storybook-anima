@@ -1,6 +1,6 @@
 {
   "name": "storybook-anima",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "A Storybook addon for Anima",
   "main": "dist/preset.js",
   "files": [
