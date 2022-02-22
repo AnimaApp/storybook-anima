@@ -51,19 +51,13 @@ export const downloadAsJSON = (data: Record<string, any>) => {
 };
 
 export const extractCSS = () => {
-  return (
-    Array.from(document.querySelectorAll("style"))
-      .filter((el) => !el.hasAttribute("data-emotion"))
-      .map((style) => style.innerHTML)
-      .join(" ") +
-    Array.from(document.querySelectorAll("[data-emotion]"))
-      .flatMap(({ sheet }: any) =>
-        [...sheet.cssRules].map((rules) => rules.cssText)
-      )
-      .join(" ")
-      .replace(/\\n/g, " ")
-      .trim()
-  );
+  return Array.from(document.querySelectorAll("style"))
+    .flatMap(({ sheet }: any) =>
+      [...sheet.cssRules].map((rules) => rules.cssText)
+    )
+    .join(" ")
+    .replace(/\\n/g, " ")
+    .trim();
 };
 
 export const authenticate = async (storybookToken: string) => {
