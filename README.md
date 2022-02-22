@@ -57,7 +57,7 @@ STORYBOOK_ANIMA_TOKEN="<paste your TOKEN here>"
 
 ## Considerations
 
-For the time being, this integration works best if the your stories composition consists of just the component itself, rather than complex stories with multiple examples or includded documentation. 
+For the time being, this integration works best if the your stories composition consists of just the component itself, rather than complex stories with multiple examples or included documentation. 
 
 #### In short, what you see in the Storybook story, is what you'll get in Figma.
 
