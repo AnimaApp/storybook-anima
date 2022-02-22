@@ -22,11 +22,18 @@ export const withHTML = makeDecorator({
 
       if (root) {
         let rootClone = root.cloneNode(true) as HTMLElement;
-        rootClone.style.width = "fit-content";
+
         document.body.appendChild(rootClone);
-        const rect = rootClone.getBoundingClientRect();
-        width = rect.width;
-        height = rect.height;
+        const rootRect = rootClone.getBoundingClientRect();
+        width = rootRect.width;
+        height = rootRect.height;
+
+        if (rootClone.childNodes.length == 1) {
+          const rect = rootClone.firstElementChild.getBoundingClientRect();
+          width = rect.width;
+          height = rect.height;
+        }
+
         rootClone.remove();
       }
 
