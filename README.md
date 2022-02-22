@@ -18,7 +18,8 @@
 ## Requirements
 
 -   Storybook@>=6.0.0
--   Anima Account 
+-   [Anima Account](https://www.animaapp.com/figma)
+-   [Anima's Figma plugin](https://www.figma.com/community/plugin/857346721138427857/Export-to-React%2C-HTML-%26-Vue-code-with-Anima)
 
 This addon should work with any framework. If you find a case that the addon does not work, please open an issue.
 
