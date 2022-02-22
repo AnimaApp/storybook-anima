@@ -22,7 +22,7 @@ export const withHTML = makeDecorator({
 
       if (root) {
         let rootClone = root.cloneNode(true) as HTMLElement;
-
+        rootClone.style.width = "fit-content";
         document.body.appendChild(rootClone);
         const rootRect = rootClone.getBoundingClientRect();
         width = rootRect.width;
