@@ -31,14 +31,15 @@ npm install --save-dev storybook-anima
 # yarn add -D storybook-anima
 ```
 
-### 2. Register the addon in `main.js`
+### 2. Register the addon in `.storybook/main.js`
 
 ```js
 // .storybook/main.js
 module.exports = {
-    addons: ["storybook-anima"],
+    addons: ["../node_modules/storybook-anima"],
 };
 ```
+Note : the path should be relative to the current directory (known Bug)
 ### 3. Set Anima access token
 
 First get the access token from the Anima Figma plugin, or in your Anima team settings. Learn more about [how to get the token from Anima](https://animaapp.com).
