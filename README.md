@@ -52,8 +52,15 @@ You can create `.env` file in your project's root folder, or you can provide the
 
 ```shell
 # .env
-STORYBOOK_ANIMA_TOKEN="eyJhbGciOiJIUzI1N.."
+STORYBOOK_ANIMA_TOKEN="<paste your TOKEN here>"
 ```
+
+## Considerations
+
+For the time being, this integration works best if the your stories composition consists of just the component itself, rather than complex stories with multiple examples or includded documentation. 
+
+#### In short, what you see in the Storybook story, is what you'll get in Figma.
+
 
 ## Development
 
