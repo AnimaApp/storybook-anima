@@ -10,11 +10,12 @@
 
 [Storybook](https://github.com/storybooks/storybook) addon that extracts the Storybook data and transforms stories into Figma components for a better design-development workflow.
 
-  <img src="screenshot.png" width="100%" alt="Anima Storybook Addon"/>
+Learn more about the motivations and benefits in our [our blog post](https://blog.animaapp.com/design-with-your-live-code-components-7f61e99b9bf0)
   
 ### Demo
-  
-  <img src="https://user-images.githubusercontent.com/708153/155323729-bc30ed5b-9b2b-43a1-866f-7da70a9b0b13.gif" width="100%" alt="Storybook to Anima to Figma Addon"/>
+  <div align="center">
+  <img src="https://user-images.githubusercontent.com/1323193/155579455-2b9919de-41e7-4e6d-b067-12993833a172.gif" width="700px" alt="Storybook to Anima to Figma Addon"/>
+  </div>
 
 ## Requirements
 
