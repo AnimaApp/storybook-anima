@@ -1,14 +1,24 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { IconButton } from "@storybook/components";
 
 import { API, useChannel, useStorybookApi, Story } from "@storybook/api";
 import {
-  createElementFromHTML,
   createStoryRequest,
-  getStoryNameFromArgs,
+  // getStoryNameFromArgs,
   notify,
+  // testV2,
 } from "./utils";
-import { STORYBOOK_ANIMA_TOKEN, EVENT_CODE_RECEIVED } from "./constants";
+import {
+  EVENT_CODE_RECEIVED,
+  EXPORT_END,
+  EXPORT_START,
+  STORYBOOK_ANIMA_TOKEN,
+} from "./constants";
+import { STORY_RENDERED } from "@storybook/core-events";
+import { choice, runSeed } from "./variants";
+import { get, has, isEmpty, isNil, omit, omitBy } from "lodash";
+import { Args } from "@storybook/addons";
+import md5 from "object-hash";
 
 interface SProps {
   api: API;
@@ -21,19 +31,160 @@ interface StoryData {
   height: number;
 }
 
-const createStory = async (story: Story, data: StoryData) => {
+const getVariants = (
+  story: Story
+): [Record<string, any>[], Record<string, any>] => {
+  const argTypes = get(story, "argTypes", null);
+  let seedObj = {};
+  const storyArgs = get(story, "args", {}) as Args;
+  const storyDefaultArgs = get(story, "initialArgs", {}) as Args;
+
+  if (argTypes) {
+    const argKeys = Object.keys(argTypes);
+
+    for (const argKey of argKeys) {
+      const arg = argTypes[argKey];
+      const control = arg?.control as { type?: string };
+      const argType = control?.type;
+
+      seedObj[argKey] = has(storyDefaultArgs, argKey)
+        ? storyDefaultArgs[argKey]
+        : has(storyArgs, argKey)
+        ? storyArgs[argKey]
+        : null;
+
+      if (["select"].includes(argType)) {
+        const options = arg?.options || arg?.control?.options;
+        seedObj[argKey] = choice(...options);
+      }
+      if (["boolean"].includes(argType)) {
+        seedObj[argKey] = choice(true, false);
+      }
+    }
+  }
+
+  seedObj = omitBy(seedObj, isNil);
+  let defaultVariant = {};
+  Object.keys(seedObj).forEach((key) => {
+    defaultVariant[key] = storyDefaultArgs[key] || storyArgs[key];
+  });
+
+  const variants = (
+    !isEmpty(seedObj)
+      ? runSeed(() => seedObj)
+      : [{ ...defaultVariant, hash: md5(defaultVariant) }]
+  ) as Record<string, any>[];
+  return [variants, defaultVariant];
+};
+
+const doExport = async (api: API, data: React.MutableRefObject<StoryData>) => {
+  if (window.location === window.parent.location) {
+    const story = api.getCurrentStoryData() as Story;
+    api.getChannel().emit("createStory", { storyId: story.id });
+  } else {
+    parent.postMessage({ action: "export-start", source: "anima" }, "*");
+
+    try {
+      await createStory(api, data);
+      parent.postMessage(
+        { action: "export-end", source: "anima", error: null },
+        "*"
+      );
+    } catch (error) {
+      parent.postMessage(
+        { action: "export-end", source: "anima", error: true },
+        "*"
+      );
+    }
+  }
+};
+
+const createStory = async (
+  api: API,
+  data: React.MutableRefObject<StoryData>
+) => {
   try {
-    const { css, height, html, width } = data;
-    const name = getStoryNameFromArgs(story.name, story.args);
-    await createStoryRequest(
-      STORYBOOK_ANIMA_TOKEN,
-      html,
-      css,
-      width,
+    const story = api.getCurrentStoryData() as Story;
+
+    console.warn(story);
+
+    let SBRenderCallback = (() => {}) as any;
+
+    const getSBRenderPromise = () => {
+      return new Promise((resolve) => {
+        SBRenderCallback = resolve;
+      });
+    };
+
+    const handleSBRender = () => {
+      setTimeout(() => {
+        process.nextTick(() => {
+          SBRenderCallback();
+        });
+      }, 0);
+    };
+
+    api.on(STORY_RENDERED, handleSBRender);
+
+    const [variants, defaultVariant] = getVariants(story);
+    const defaultVariantHash = md5(defaultVariant);
+
+    let HTML = "",
+      CSS = "",
+      defaultHTML = "",
+      defaultCSS = "";
+    for (let i = 0; i < variants.length; i++) {
+      const variantHash = get(variants[i], "hash", "");
+      console.log(variantHash);
+      const variant = omit(variants[i], "hash");
+
+      const p = getSBRenderPromise();
+
+      api.updateStoryArgs(story, variant);
+      await p;
+
+      const variantData = [];
+      Object.keys(variant).forEach((key) => {
+        const value = variant[key];
+        variantData.push(`${key}=${value}`);
+      });
+
+      const variantID = variantData.join(",") || "default";
+      const variantHTML = `<div data-variant=${variantID} data-variant-id="${variantHash}">${data.current.html}</div>`;
+      const variantCSS = data.current.css;
+
+      if (defaultVariantHash === variantHash) {
+        defaultHTML = variantHTML;
+        defaultCSS = variantCSS;
+      }
+
+      HTML += variantHTML;
+      CSS += variantCSS;
+    }
+
+    const customCSS = `
+    #root{
+      display: inline-grid;
+      grid-template-columns: repeat(8, 1fr);
+      grid-template-rows: auto;
+      gap: 10px 10px;
+    }
+`;
+
+    CSS += customCSS;
+
+    const { height, width } = data.current;
+    // const name = getStoryNameFromArgs(story.name, story.args);
+    await createStoryRequest({
+      storybookToken: STORYBOOK_ANIMA_TOKEN,
+      CSS,
+      HTML,
+      defaultCSS,
+      defaultHTML,
       height,
-      name
-    );
-    notify("Story synced successfully");
+      name: story.name,
+      width,
+    });
   } catch (error) {
     console.log(error);
     return error;
@@ -45,7 +196,7 @@ const createStory = async (story: Story, data: StoryData) => {
 export const ExportButton: React.FC<SProps> = () => {
   const [isExporting, setIsExporting] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [storyData, setStoryData] = useState<StoryData>({
+  const storyData = useRef<StoryData>({
     css: "",
     html: "",
     width: 0,
@@ -54,47 +205,76 @@ export const ExportButton: React.FC<SProps> = () => {
 
   useChannel({
     [EVENT_CODE_RECEIVED]: (data) => {
-      setStoryData(data);
+      storyData.current = data;
     },
     ["AUTH"]: (authState) => {
       setIsAuthenticated(authState);
     },
+    [EXPORT_START]: () => {
+      setIsExporting(true);
+    },
+    [EXPORT_END]: ({ error = false } = {}) => {
+      setIsExporting(false);
+      if (!error) {
+        notify("Story synced successfully");
+      }
+    },
   });
 
-  useEffect(() => {
-    const customFont = document.querySelector("#anima-custom-font");
-    !customFont &&
-      document.head.appendChild(
-        createElementFromHTML(
-          `<link href="https://fonts.googleapis.com/css2?family=Inter&display=swap" rel="stylesheet">`
-        )
-      ) &&
-      document.head.appendChild(
-        createElementFromHTML(
-          `<style>.t{animation:3s cubic-bezier(.34,1.56,.64,1) 0s infinite normal forwards running t;transform-box:fill-box;transform-origin:0% 0%}@keyframes t{0%{transform:scale(0);opacity:0}3.33%{opacity:1}23.33%{transform:scale(1)}76.67%{opacity:1}80%{transform:scale(1)}93.33%{transform:scale(0);opacity:0}100%{transform:scale(0);opacity:0}}.c{animation:3s cubic-bezier(.34,1.56,.64,1) .5s infinite normal forwards running c;transform-box:fill-box;transform-origin:50% 50%}@keyframes c{0%{transform:scale(0);opacity:0}3.33%{opacity:1}23.33%{transform:scale(1)}76.67%{opacity:1}80%{transform:scale(1)}93.33%{transform:scale(0);opacity:0}100%{transform:scale(0);opacity:0}}.l{animation:3s cubic-bezier(.34,1.56,.64,1) .8s infinite normal forwards running l;transform-box:fill-box;transform-origin:50% 50%}@keyframes l{0%{transform:scale(0) rotateZ(-180deg);opacity:0}3.33%{opacity:1}23.33%{transform:scale(1)}50%{transform:rotateZ(0)}76.67%{opacity:1}80%{transform:scale(1)}93.33%{transform:scale(0);opacity:0}100%{transform:scale(0);opacity:0}}</style>`
-        )
-      );
+  // const isMainThread = window.location === window.parent.location;
 
-    return () => {};
+  const handleChangeStory = ((event: CustomEvent) => {
+    // api.selectStory(kindOeId);
+
+    const storyId = get(event, "detail.storyId", null);
+    if (storyId) {
+      console.warn(storyId, "change-story");
+      api.selectStory(storyId);
+      doExport(api, storyData);
+    }
+  }) as any;
+
+  useEffect(() => {
+    document.addEventListener("change-story", handleChangeStory);
+
+    return () => {
+      document.removeEventListener("change-story", handleChangeStory);
+    };
   }, []);
 
   const api = useStorybookApi();
-  const story = api.getCurrentStoryData() as Story;
 
   return (
     <IconButton
+      id="export-button"
       title={isAuthenticated ? "Export to Anima" : "Authenticate to export"}
-      onClick={async () => {
-        setIsExporting(true);
-        await createStory(story, storyData);
-        setIsExporting(false);
+      onClick={() => {
+        doExport(api, storyData);
       }}
     >
       {isExporting ? (
-        <svg width="16px" height="16px" fill="none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 478 522">
-        <path className="t" d="M52.655 55h355.457a2.608 2.608 0 0 1 2.247 1.21 2.599 2.599 0 0 1 .147 2.546 398.689 398.689 0 0 1-134.045 153.408c-92.415 62.352-185.475 68.791-223.778 69.135A2.625 2.625 0 0 1 50 278.672V57.628A2.63 2.63 0 0 1 52.655 55Z" fill="#FF6250"/>
-        <path className="c" d="M129.375 467.75c43.835 0 79.37-35.536 79.37-79.371 0-43.834-35.535-79.369-79.37-79.369-43.835 0-79.37 35.535-79.37 79.369 0 43.835 35.535 79.371 79.37 79.371Z" fill="#FFDF90"/>
-        <path className="l" d="M310.854 464.542c-22.453-8.571-34.395-33.281-26.787-55.156l59.917-170.984c7.677-21.875 32.098-32.648 54.552-24.077 22.453 8.585 34.395 33.281 26.787 55.169l-59.917 170.985c-7.677 21.875-32.098 32.662-54.552 24.063Z" fill="#36F"/>
+        <svg
+          width="16px"
+          height="16px"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 478 522"
+        >
+          <path
+            className="t"
+            d="M52.655 55h355.457a2.608 2.608 0 0 1 2.247 1.21 2.599 2.599 0 0 1 .147 2.546 398.689 398.689 0 0 1-134.045 153.408c-92.415 62.352-185.475 68.791-223.778 69.135A2.625 2.625 0 0 1 50 278.672V57.628A2.63 2.63 0 0 1 52.655 55Z"
+            fill="#FF6250"
+          />
+          <path
+            className="c"
+            d="M129.375 467.75c43.835 0 79.37-35.536 79.37-79.371 0-43.834-35.535-79.369-79.37-79.369-43.835 0-79.37 35.535-79.37 79.369 0 43.835 35.535 79.371 79.37 79.371Z"
+            fill="#FFDF90"
+          />
+          <path
+            className="l"
+            d="M310.854 464.542c-22.453-8.571-34.395-33.281-26.787-55.156l59.917-170.984c7.677-21.875 32.098-32.648 54.552-24.077 22.453 8.585 34.395 33.281 26.787 55.169l-59.917 170.985c-7.677 21.875-32.098 32.662-54.552 24.063Z"
+            fill="#36F"
+          />
         </svg>
       ) : (
         <svg

@@ -7,7 +7,7 @@ export const withHTML = makeDecorator({
   parameterName: "html",
   skipIfNoParametersOrOptions: false,
   wrapper: (storyFn, context, { parameters = {} }) => {
-    setTimeout(() => {
+    process.nextTick(() => {
       const channel = addons.getChannel();
       const rootSelector = parameters.root || "#root";
       const root = document.querySelector(rootSelector) as HTMLElement | null;
@@ -44,7 +44,7 @@ export const withHTML = makeDecorator({
         height,
         options: parameters,
       });
-    }, 0);
+    });
     return storyFn(context);
   },
 });

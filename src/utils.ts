@@ -76,14 +76,29 @@ export const authenticate = async (storybookToken: string) => {
     return false;
   }
 };
-export const createStoryRequest = async (
-  storybookToken: string,
-  html: string,
-  css: string,
-  width: number,
-  height: number,
-  name: string
-) => {
+
+interface CreateStoryArgs {
+  storybookToken: string;
+  HTML: string;
+  CSS: string;
+  width: number;
+  height: number;
+  defaultHTML: string;
+  defaultCSS: string;
+  name: string;
+}
+
+export const createStoryRequest = async (args: CreateStoryArgs) => {
+  const {
+    storybookToken,
+    CSS,
+    HTML,
+    height,
+    name,
+    width,
+    defaultCSS,
+    defaultHTML,
+  } = args;
   if (!storybookToken) return false;
   return fetch(`${API_URL}/stories`, {
     method: "POST",
@@ -92,12 +107,14 @@ export const createStoryRequest = async (
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      html,
-      css,
+      html: HTML,
+      css: CSS,
       width,
       height,
       name,
       storybook_auth_token: storybookToken,
+      default_css: defaultCSS,
+      default_html: defaultHTML,
     }),
   });
 };
