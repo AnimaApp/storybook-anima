@@ -78,21 +78,20 @@ export const authenticate = async (storybookToken: string) => {
 };
 
 export const getStorybookToken = () => {
-  debugger;
   const params = new URLSearchParams(window.location.search);
-  const tokenFromUrl = params.get('anima_t');
+  const tokenFromUrl = params.get("anima_t");
   if (tokenFromUrl) {
-    localStorage.setItem('anima_t', tokenFromUrl);
+    localStorage.setItem("anima_t", tokenFromUrl);
     return tokenFromUrl;
   }
 
-  const tokenFromLocalStorage = localStorage.getItem('anima_t');
+  const tokenFromLocalStorage = localStorage.getItem("anima_t");
   if (tokenFromLocalStorage) {
     return tokenFromLocalStorage;
   }
 
   return STORYBOOK_ANIMA_TOKEN;
-}
+};
 
 export const createStoryRequest = async (
   storybookToken: string,
