@@ -72,7 +72,7 @@ npm run build
 npm run dev
 ```
 
-For more information visit : [Anima Storybook integration](https://animaapp.com)
+For more information visit : [Anima Storybook integration](https://blog.animaapp.com/design-with-your-live-code-components-7f61e99b9bf0)
 
 ## License
 
