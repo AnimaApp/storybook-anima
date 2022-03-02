@@ -1,13 +1,13 @@
 import React from "react";
 import { addons, types } from "@storybook/addons";
-import { ADDON_ID, STORYBOOK_ANIMA_TOKEN } from "./constants";
+import { ADDON_ID } from "./constants";
 import { ExportButton } from "./ExportButton";
-import { authenticate } from "./utils";
+import { authenticate, getStorybookToken } from "./utils";
 
 addons.register(ADDON_ID, (api) => {
   const channel = api.getChannel();
 
-  authenticate(STORYBOOK_ANIMA_TOKEN).then((isAuthenticated) => {
+  authenticate(getStorybookToken()).then((isAuthenticated) => {
     channel.emit("AUTH", isAuthenticated);
   });
 
