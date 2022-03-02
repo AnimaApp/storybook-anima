@@ -4,16 +4,11 @@ import { IconButton } from "@storybook/components";
 import { API, useChannel, useStorybookApi, Story } from "@storybook/api";
 import {
   createStoryRequest,
+  getStorybookToken,
   // getStoryNameFromArgs,
   notify,
-  // testV2,
 } from "./utils";
-import {
-  EVENT_CODE_RECEIVED,
-  EXPORT_END,
-  EXPORT_START,
-  STORYBOOK_ANIMA_TOKEN,
-} from "./constants";
+import { EVENT_CODE_RECEIVED, EXPORT_END, EXPORT_START } from "./constants";
 import { STORY_RENDERED } from "@storybook/core-events";
 import { choice, runSeed } from "./variants";
 import { get, has, isEmpty, isNil, omit, omitBy } from "lodash";
@@ -176,7 +171,7 @@ const createStory = async (
     const { height, width } = data.current;
     // const name = getStoryNameFromArgs(story.name, story.args);
     await createStoryRequest({
-      storybookToken: STORYBOOK_ANIMA_TOKEN,
+      storybookToken: getStorybookToken(),
       CSS,
       HTML,
       defaultCSS,
@@ -221,7 +216,7 @@ export const ExportButton: React.FC<SProps> = () => {
     },
   });
 
-  // const isMainThread = window.location === window.parent.location;
+  const isMainThread = window.location === window.parent.location;
 
   const handleChangeStory = ((event: CustomEvent) => {
     // api.selectStory(kindOeId);
@@ -249,6 +244,12 @@ export const ExportButton: React.FC<SProps> = () => {
       id="export-button"
       title={isAuthenticated ? "Export to Anima" : "Authenticate to export"}
       onClick={() => {
+        if (isMainThread && !isAuthenticated) {
+          notify(
+            "Missing team token. Please read the installation instructions."
+          );
+          return;
+        }
         doExport(api, storyData);
       }}
     >

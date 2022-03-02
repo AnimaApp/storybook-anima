@@ -1,19 +1,21 @@
 <div align="center">
-
   <br/>
   <img src="https://user-images.githubusercontent.com/1323193/153215858-dc6b4ac3-411a-4cf0-8e56-b4460ee339d7.svg" width="280" alt="Storybook to Anima to Figma Addon"/>
   <br/>
+  
   <h1>Storybook Anima addon</h1>
 
   <br/>
-
 </div>
 
 [Storybook](https://github.com/storybooks/storybook) addon that extracts the Storybook data and transforms stories into Figma components for a better design-development workflow.
 
-  <img src="screenshot.png" width="100%" alt="Anima Storybook Addon"/>
-
-## Links
+Learn more about the motivations and benefits in our [our blog post](https://blog.animaapp.com/design-with-your-live-code-components-7f61e99b9bf0)
+  
+### Demo
+  <div align="center">
+  <img src="https://user-images.githubusercontent.com/1323193/155579455-2b9919de-41e7-4e6d-b067-12993833a172.gif" width="700px" alt="Storybook to Anima to Figma Addon"/>
+  </div>
 
 ## Requirements
 
@@ -70,7 +72,7 @@ npm run build
 npm run dev
 ```
 
-For more information visit : [Anima Storybook integration](https://animaapp.com)
+For more information visit : [Anima Storybook integration](https://blog.animaapp.com/design-with-your-live-code-components-7f61e99b9bf0)
 
 ## License
 

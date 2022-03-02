@@ -1,13 +1,12 @@
 import React from "react";
 import { addons, types } from "@storybook/addons";
-import {
-  ADDON_ID,
-  EXPORT_END,
-  EXPORT_START,
-  STORYBOOK_ANIMA_TOKEN,
-} from "./constants";
+import { ADDON_ID, EXPORT_END, EXPORT_START } from "./constants";
 import { ExportButton } from "./ExportButton";
-import { authenticate, createElementFromHTML } from "./utils";
+import {
+  authenticate,
+  createElementFromHTML,
+  getStorybookToken,
+} from "./utils";
 import { GLOBAL_STYLES } from "./globalStyles";
 import { get } from "lodash";
 
@@ -82,7 +81,7 @@ addons.register(ADDON_ID, (api) => {
       frame.contentDocument.dispatchEvent(ev);
     });
 
-    authenticate(STORYBOOK_ANIMA_TOKEN).then((isAuthenticated) => {
+    authenticate(getStorybookToken()).then((isAuthenticated) => {
       channel.emit("AUTH", isAuthenticated);
     });
   }
