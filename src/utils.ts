@@ -1,6 +1,6 @@
 import { Args } from "@storybook/api";
 import { createAlert } from "./components/alert";
-import { API_URL } from "./constants";
+import { API_URL, STORYBOOK_ANIMA_TOKEN } from "./constants";
 
 export const isString = (value: any) =>
   Object.prototype.toString.call(value) === "[object String]";
@@ -76,6 +76,24 @@ export const authenticate = async (storybookToken: string) => {
     return false;
   }
 };
+
+export const getStorybookToken = () => {
+  debugger;
+  const params = new URLSearchParams(window.location.search);
+  const tokenFromUrl = params.get('anima_t');
+  if (tokenFromUrl) {
+    localStorage.setItem('anima_t', tokenFromUrl);
+    return tokenFromUrl;
+  }
+
+  const tokenFromLocalStorage = localStorage.getItem('anima_t');
+  if (tokenFromLocalStorage) {
+    return tokenFromLocalStorage;
+  }
+
+  return STORYBOOK_ANIMA_TOKEN;
+}
+
 export const createStoryRequest = async (
   storybookToken: string,
   html: string,
