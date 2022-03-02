@@ -7,8 +7,9 @@ import {
   createStoryRequest,
   getStoryNameFromArgs,
   notify,
+  getStorybookToken,
 } from "./utils";
-import { STORYBOOK_ANIMA_TOKEN, EVENT_CODE_RECEIVED } from "./constants";
+import { EVENT_CODE_RECEIVED } from "./constants";
 
 interface SProps {
   api: API;
@@ -26,7 +27,7 @@ const createStory = async (story: Story, data: StoryData) => {
     const { css, height, html, width } = data;
     const name = getStoryNameFromArgs(story.name, story.args);
     await createStoryRequest(
-      STORYBOOK_ANIMA_TOKEN,
+      getStorybookToken(),
       html,
       css,
       width,
