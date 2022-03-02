@@ -85,6 +85,10 @@ export const ExportButton: React.FC<SProps> = () => {
     <IconButton
       title={isAuthenticated ? "Export to Anima" : "Authenticate to export"}
       onClick={async () => {
+        if (!isAuthenticated) { 
+          notify("Missing team token. Please read the installation instructions.");
+          return; 
+        }
         setIsExporting(true);
         await createStory(story, storyData);
         setIsExporting(false);
