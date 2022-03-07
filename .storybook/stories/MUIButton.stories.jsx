@@ -5,12 +5,10 @@ export default {
   title: 'Example/MUI Button',
   component: MUIButton,
   argTypes: {
-    // variant: { control: { type: 'select', }, options: ['text', 'outlined', 'contained'] },
     variant: { control: { type: 'select', }, options: ['outlined', 'contained'] },
-    color: { control: { type: 'select', }, options: ['primary', 'secondary'] },
-    color: { control: { type: 'select', }, options: ['primary'] },
+    // color: { control: { type: 'select', }, options: ['primary', "secondary", "warning", "info", "success"] },
     // size: { control: { type: 'select', }, options: ['small', 'medium', 'large'] },
-    disabled: { control: 'boolean' },
+    // disabled: { control: 'boolean' },
   },
 };
 
@@ -22,5 +20,6 @@ Button.args = {
   variant: 'contained',
   color: 'primary',
   disabled: false,
+  size: 'medium',
 };
 

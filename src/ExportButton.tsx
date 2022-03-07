@@ -11,9 +11,19 @@ import {
 import { EVENT_CODE_RECEIVED, EXPORT_END, EXPORT_START } from "./constants";
 import { STORY_RENDERED } from "@storybook/core-events";
 import { choice, runSeed } from "./variants";
-import { get, has, isEmpty, isNil, omit, omitBy } from "lodash";
+import {
+  get,
+  has,
+  isEmpty,
+  isNil,
+  isString,
+  omit,
+  omitBy,
+  uniqBy,
+} from "lodash";
 import { Args } from "@storybook/addons";
 import md5 from "object-hash";
+import { InputType } from "@storybook/csf";
 
 interface SProps {
   api: API;
@@ -26,9 +36,43 @@ interface StoryData {
   height: number;
 }
 
+const getArgType = (arg: InputType): string => {
+  let argType = "";
+  const control = arg?.control as { type?: string };
+  argType = control?.type;
+  if (!argType) {
+    argType = isString(arg.type) ? arg.type : arg.type.name;
+  }
+  return argType;
+};
+
+const getArgOptions = (arg: InputType): any[] => {
+  const options = arg?.options || arg?.control?.options || [];
+  return options;
+};
+
+const populateSeedObjectBasedOnArgType = (
+  seedObj: Record<string, any>,
+  arg: InputType,
+  argKey: string
+) => {
+  const seedObject = { ...seedObj };
+  const argType = getArgType(arg);
+  const argOptions = getArgOptions(arg);
+  switch (argType) {
+    case "select":
+      seedObject[argKey] = choice(...argOptions);
+      break;
+    case "boolean":
+      seedObject[argKey] = choice(true, false);
+      break;
+  }
+  return seedObject;
+};
+
 const getVariants = (
   story: Story
-): [Record<string, any>[], Record<string, any>] => {
+): [Record<string, any>[], Record<string, any>, string] => {
   const argTypes = get(story, "argTypes", null);
   let seedObj = {};
   const storyArgs = get(story, "args", {}) as Args;
@@ -39,8 +83,6 @@ const getVariants = (
 
     for (const argKey of argKeys) {
       const arg = argTypes[argKey];
-      const control = arg?.control as { type?: string };
-      const argType = control?.type;
 
       seedObj[argKey] = has(storyDefaultArgs, argKey)
         ? storyDefaultArgs[argKey]
@@ -48,28 +90,39 @@ const getVariants = (
         ? storyArgs[argKey]
         : null;
 
-      if (["select"].includes(argType)) {
-        const options = arg?.options || arg?.control?.options;
-        seedObj[argKey] = choice(...options);
-      }
-      if (["boolean"].includes(argType)) {
-        seedObj[argKey] = choice(true, false);
-      }
+      seedObj = populateSeedObjectBasedOnArgType(seedObj, arg, argKey);
     }
   }
 
   seedObj = omitBy(seedObj, isNil);
   let defaultVariant = {};
   Object.keys(seedObj).forEach((key) => {
-    defaultVariant[key] = storyDefaultArgs[key] || storyArgs[key];
+    const getValue = (key: string) => {
+      if (has(storyDefaultArgs, key)) return storyDefaultArgs[key];
+      if (has(storyArgs, key)) return storyArgs[key];
+
+      const arg = argTypes[key];
+      const argType = getArgType(arg);
+
+      if (["select"].includes(argType)) {
+        const options = getArgOptions(arg);
+        return options.length > 0 ? options[0] : null;
+      }
+      if (["boolean"].includes(argType)) {
+        return false;
+      }
+    };
+
+    defaultVariant[key] = getValue(key);
   });
 
+  const hash = md5(defaultVariant);
+  defaultVariant["hash"] = hash;
+
   const variants = (
-    !isEmpty(seedObj)
-      ? runSeed(() => seedObj)
-      : [{ ...defaultVariant, hash: md5(defaultVariant) }]
+    !isEmpty(seedObj) ? runSeed(() => seedObj) : [defaultVariant]
   ) as Record<string, any>[];
-  return [variants, defaultVariant];
+  return [variants, defaultVariant, hash];
 };
 
 const doExport = async (api: API, data: React.MutableRefObject<StoryData>) => {
@@ -121,34 +174,39 @@ const createStory = async (
 
     api.on(STORY_RENDERED, handleSBRender);
 
-    const [variants, defaultVariant] = getVariants(story);
-    const defaultVariantHash = md5(defaultVariant);
+    const [variants, defaultVariant, defaultVariantHash] = getVariants(story);
 
     let HTML = "",
       CSS = "",
       defaultHTML = "",
       defaultCSS = "";
-    for (let i = 0; i < variants.length; i++) {
-      const variantHash = get(variants[i], "hash", "");
-      console.log(variantHash);
-      const variant = omit(variants[i], "hash");
+
+    const orderedVariants = uniqBy(
+      [defaultVariant, ...variants],
+      (e) => e.hash
+    );
+
+    const hashArray = orderedVariants.map((e) => e.hash);
+
+    for (let i = 0; i < orderedVariants.length; i++) {
+      const variantHash = get(orderedVariants[i], "hash", "");
+      const variant = omit(orderedVariants[i], "hash");
 
       const p = getSBRenderPromise();
 
       api.updateStoryArgs(story, variant);
       await p;
 
-      const variantData = [];
-      Object.keys(variant).forEach((key) => {
-        const value = variant[key];
-        variantData.push(`${key}=${value}`);
-      });
+      const variantData = Object.keys(variant).map(
+        (key) => `${key}=${variant[key]}`
+      );
 
       const variantID = variantData.join(",") || "default";
       const variantHTML = `<div data-variant=${variantID} data-variant-id="${variantHash}">${data.current.html}</div>`;
       const variantCSS = data.current.css;
 
-      if (defaultVariantHash === variantHash) {
+      if (variantHash === defaultVariantHash) {
+        console.warn("DEFAULT VARIANT", variant);
         defaultHTML = variantHTML;
         defaultCSS = variantCSS;
       }
@@ -157,21 +215,25 @@ const createStory = async (
       CSS += variantCSS;
     }
 
-    const customCSS = `
+    const gridCSS = `
     #root{
       display: inline-grid;
-      grid-template-columns: repeat(8, 1fr);
+      grid-template-columns: repeat(6, 1fr);
       grid-template-rows: auto;
-      gap: 10px 10px;
+      gap: 10px 5px;
     }
 `;
 
-    CSS += customCSS;
+    // display the variants in a grid layout
+    variants.length > 1 && (CSS += gridCSS);
+
+    const fingerprint = md5({ variants: hashArray, name: story.name });
+    console.log(fingerprint);
 
     const { height, width } = data.current;
-    // const name = getStoryNameFromArgs(story.name, story.args);
     await createStoryRequest({
       storybookToken: getStorybookToken(),
+      fingerprint,
       CSS,
       HTML,
       defaultCSS,

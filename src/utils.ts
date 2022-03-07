@@ -53,7 +53,12 @@ export const downloadAsJSON = (data: Record<string, any>) => {
 export const extractCSS = () => {
   return Array.from(document.querySelectorAll("style"))
     .flatMap(({ sheet }: any) =>
-      [...sheet.cssRules].map((rules) => rules.cssText)
+      [...sheet.cssRules].map((rule: any) => {
+        const selector = rule?.selectorText || (rule?.name as string);
+        if ([".sb-", "sb-", ":not(.sb"].some((e) => selector?.startsWith(e)))
+          return "";
+        return rule.cssText;
+      })
     )
     .join(" ")
     .replace(/\\n/g, " ")
@@ -95,6 +100,7 @@ export const getStorybookToken = () => {
 
 interface CreateStoryArgs {
   storybookToken: string;
+  fingerprint: string;
   HTML: string;
   CSS: string;
   width: number;
@@ -107,6 +113,7 @@ interface CreateStoryArgs {
 export const createStoryRequest = async (args: CreateStoryArgs) => {
   const {
     storybookToken,
+    fingerprint,
     CSS,
     HTML,
     height,
@@ -125,12 +132,14 @@ export const createStoryRequest = async (args: CreateStoryArgs) => {
     body: JSON.stringify({
       html: HTML,
       css: CSS,
+      fingerprint,
       width,
       height,
       name,
       storybook_auth_token: storybookToken,
       default_css: defaultCSS,
       default_html: defaultHTML,
+      with_variants: true,
     }),
   });
 };
