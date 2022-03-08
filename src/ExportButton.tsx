@@ -10,7 +10,7 @@ import {
 } from "./utils";
 import { EVENT_CODE_RECEIVED, EXPORT_END, EXPORT_START } from "./constants";
 import { STORY_RENDERED } from "@storybook/core-events";
-import { choice, runSeed } from "./variants";
+import { choice, runSeed } from "./utils";
 import {
   get,
   has,
