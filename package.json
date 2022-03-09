@@ -9,8 +9,11 @@
     "*.js"
   ],
   "keywords": [
-    "storybook",
-    "addons"
+    "storybook-addon",
+    "storybook-to-figma",
+    "anima",
+    "figma",
+    "design"
   ],
   "author": "Anima",
   "license": "MIT",
@@ -49,5 +52,9 @@
     "sb:build": "build-storybook",
     "build": "rollup -c && tsc",
     "chromatic": "npx chromatic --project-token=37438085fe24"
+  },
+  "storybook": {
+    "displayName": "Anima",
+    "icon": "https://user-images.githubusercontent.com/1323193/157461790-52dc5857-2520-4ea8-84d0-bbeed32b4657.png"
   }
 }
