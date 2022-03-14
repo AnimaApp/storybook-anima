@@ -1,6 +1,8 @@
 import { addons, makeDecorator } from "@storybook/addons";
-import { EVENT_CODE_RECEIVED } from "../constants";
+import { EVENT_CODE_RECEIVED, IFRAME_RENDERER_CLICK } from "../constants";
 import { extractCSS } from "../utils";
+
+let listener;
 
 export const withHTML = makeDecorator({
   name: "withHTML",
@@ -8,6 +10,9 @@ export const withHTML = makeDecorator({
   skipIfNoParametersOrOptions: false,
   wrapper: (storyFn, context, { parameters = {} }) => {
     process.nextTick(() => {
+      if (listener) {
+        document.removeEventListener("click", listener);
+      }
       const channel = addons.getChannel();
       const rootSelector = parameters.root || "#root";
       const root = document.querySelector(rootSelector) as HTMLElement | null;
@@ -16,6 +21,12 @@ export const withHTML = makeDecorator({
       if (parameters.removeEmptyComments) {
         html = html.replace(/<!--\s*-->/g, "");
       }
+
+      listener = () => {
+        channel.emit(IFRAME_RENDERER_CLICK);
+      };
+
+      document.addEventListener("click", listener);
 
       let width = 0,
         height = 0;

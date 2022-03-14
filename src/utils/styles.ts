@@ -45,6 +45,34 @@ const GLOBAL_STYLES = `
   will-change: width;
 }
 
+.sb_popover_content{
+  background-color: #3B3B3B;
+  padding:10px 0;
+  border-radius:5px;
+  color:#fff;
+  font-family: Mulish, sans-serif;
+  font-size:14px;
+  overflow:hidden;
+}
+.sb_popover_list{
+  list-style:none;
+  padding:0;
+  margin:0;
+  display:flex;
+  flex-direction:column;
+}
+.sb_popover_list_item {
+  padding:5px 20px;
+  cursor:pointer;
+
+}
+.sb_popover_list_item:not(:last-child) {
+  margin-bottom:5px;
+}
+.sb_popover_list_item:hover {
+  color:#ff6250;
+}
+
 `;
 
 export const injectCustomStyles = () => {
@@ -52,7 +80,12 @@ export const injectCustomStyles = () => {
   !customFont &&
     document.head.appendChild(
       createElementFromHTML(
-        `<link href="https://fonts.googleapis.com/css2?family=Mulish:wght@400;500;600;700&display=swap" rel="stylesheet">`
+        `<link rel="preconnect" href="https://fonts.googleapis.com">`
+      )
+    ) &&
+    document.head.appendChild(
+      createElementFromHTML(
+        `<link  href="https://fonts.googleapis.com/css2?family=Mulish:wght@400;500;600;700&display=swap" rel="stylesheet">`
       )
     ) &&
     document.head.appendChild(

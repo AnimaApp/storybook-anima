@@ -1,9 +1,9 @@
 import React from 'react';
-import { MUIButton } from './MUIButton';
+import { default as Component } from '@mui/material/Button';
 
 export default {
   title: 'Example/MUI Button',
-  component: MUIButton,
+  component: Component,
   argTypes: {
     variant: { control: { type: 'select', }, options: ['outlined', 'contained'] },
     color: { control: { type: 'select', }, options: ['primary', "secondary", "warning", "info", "success"] },
@@ -12,7 +12,7 @@ export default {
   },
 };
 
-const Template = (args) => <MUIButton {...args} />;
+const Template = (args) => (<Component {...args}>{args.label}</Component>);
 
 export const Button = Template.bind({});
 Button.args = {

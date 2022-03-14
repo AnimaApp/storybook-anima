@@ -2,9 +2,12 @@ import React from "react";
 import { addons, types } from "@storybook/addons";
 import {
   ADDON_ID,
+  EXPORT_ALL_STORIES,
   EXPORT_END,
   EXPORT_PROGRESS,
+  EXPORT_SINGLE_STORY,
   EXPORT_START,
+  ON_AUTH,
 } from "./constants";
 import { ExportButton } from "./ExportButton";
 import { authenticate, getStorybookToken, injectCustomStyles } from "./utils";
@@ -38,7 +41,6 @@ addons.register(ADDON_ID, (api) => {
               channel.emit(EXPORT_START, data);
               break;
             case EXPORT_END:
-              console.log(data);
               channel.emit(EXPORT_END, { error: data.error });
               break;
             case EXPORT_PROGRESS:
@@ -73,14 +75,17 @@ addons.register(ADDON_ID, (api) => {
     frame.src = window.location.href;
     document.body.appendChild(frame);
 
-    channel.on("createStory", async ({ storyId }) => {
-      console.log("createStory", storyId);
-      const ev = new CustomEvent("change-story", { detail: { storyId } });
+    channel.on(EXPORT_SINGLE_STORY, async ({ storyId }) => {
+      const ev = new CustomEvent(EXPORT_SINGLE_STORY, { detail: { storyId } });
+      frame.contentDocument.dispatchEvent(ev);
+    });
+    channel.on(EXPORT_ALL_STORIES, async ({ stories }) => {
+      const ev = new CustomEvent(EXPORT_ALL_STORIES, { detail: { stories } });
       frame.contentDocument.dispatchEvent(ev);
     });
 
     authenticate(getStorybookToken()).then((isAuthenticated) => {
-      channel.emit("AUTH", isAuthenticated);
+      channel.emit(ON_AUTH, isAuthenticated);
     });
   }
 
