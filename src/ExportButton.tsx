@@ -4,6 +4,7 @@ import { IconButton } from "@storybook/components";
 import { API, useChannel, useStorybookApi, Story } from "@storybook/api";
 import {
   createStoryRequest,
+  escapeHtml,
   getStorybookToken,
   // getStoryNameFromArgs,
   notify,
@@ -223,8 +224,8 @@ const createStory = async (
       (key) => `${key}=${variant[key]}`
     );
 
-    const variantID = variantData.join(",") || "default";
-    const variantHTML = `<div data-variant=${variantID} data-variant-id="${variantHash}">${data.current.html}</div>`;
+    const variantID = escapeHtml(variantData.join(",") || "default");
+    const variantHTML = `<div data-variant='${variantID}' data-variant-id="${variantHash}">${data.current.html}</div>`;
     const variantCSS = data.current.css;
 
     if (variantHash === defaultVariantHash) {
