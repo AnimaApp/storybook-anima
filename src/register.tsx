@@ -1,9 +1,16 @@
 import React from "react";
 import { addons, types } from "@storybook/addons";
-import { ADDON_ID, EXPORT_END, EXPORT_START } from "./constants";
+import {
+  ADDON_ID,
+  EXPORT_END,
+  EXPORT_PROGRESS,
+  EXPORT_START,
+} from "./constants";
 import { ExportButton } from "./ExportButton";
 import { authenticate, getStorybookToken, injectCustomStyles } from "./utils";
 import { get } from "lodash";
+import ReactDOM from "react-dom";
+import Banner from "./components/banner";
 
 addons.register(ADDON_ID, (api) => {
   const channel = api.getChannel();
@@ -12,6 +19,12 @@ addons.register(ADDON_ID, (api) => {
 
   // ON THE MAIN PAGE
   if (window.location === window.parent.location) {
+    const animaRoot = document.createElement("div");
+    animaRoot.id = "anima-root";
+    document.body.appendChild(animaRoot);
+
+    ReactDOM.render(<Banner channel={channel} />, animaRoot);
+
     window.addEventListener(
       "message",
       (event) => {
@@ -21,11 +34,15 @@ addons.register(ADDON_ID, (api) => {
           const data = get(event, "data.data", {});
 
           switch (action) {
-            case "export-start":
-              channel.emit(EXPORT_START);
+            case EXPORT_START:
+              channel.emit(EXPORT_START, data);
               break;
-            case "export-end":
+            case EXPORT_END:
+              console.log(data);
               channel.emit(EXPORT_END, { error: data.error });
+              break;
+            case EXPORT_PROGRESS:
+              channel.emit(EXPORT_PROGRESS, data);
               break;
 
             default:

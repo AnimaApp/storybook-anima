@@ -1,6 +1,50 @@
 import { createElementFromHTML } from "./helpers";
 
 const GLOBAL_STYLES = `
+
+.anima_export_banner {
+  position: fixed;
+  z-index: 998;
+  bottom: 20px;
+  right: 20px;
+  height: 65px;
+  min-Width: 200px;
+  box-shadow: inset 0px 0px 0px 2px #505050;
+  border-radius: 5px;
+  overflow: hidden;
+  font-family: Mulish, sans-serif;
+}
+
+.anima_export_banner_content {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  padding: 15px;
+  background-color:#3B3B3B;
+  color:#fff;
+}
+
+.anima_export_banner_progress {
+  position: absolute;
+  z-index: 999;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  overflow: hidden;
+  background: #6F6F6F;
+}
+
+.anima_export_banner_progress_inner {
+  background: #ff6250;
+  width: var(--width);
+  height: 100%;
+  transition: width 0.2s ease;
+  will-change: width;
+}
+
 `;
 
 export const injectCustomStyles = () => {
@@ -8,7 +52,7 @@ export const injectCustomStyles = () => {
   !customFont &&
     document.head.appendChild(
       createElementFromHTML(
-        `<link href="https://fonts.googleapis.com/css2?family=Inter&display=swap" rel="stylesheet">`
+        `<link href="https://fonts.googleapis.com/css2?family=Mulish:wght@400;500;600;700&display=swap" rel="stylesheet">`
       )
     ) &&
     document.head.appendChild(

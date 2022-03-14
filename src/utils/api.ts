@@ -1,6 +1,7 @@
 import { API_URL, STORYBOOK_ANIMA_TOKEN } from "../constants";
 import { capitalize, isBoolean, isString } from "./helpers";
 import { Args } from "@storybook/api";
+import { gzip } from "pako";
 
 interface CreateStoryArgs {
   storybookToken: string;
@@ -59,14 +60,10 @@ export const createStoryRequest = async (args: CreateStoryArgs) => {
     defaultCSS,
     defaultHTML,
   } = args;
-  if (!storybookToken) return false;
-  return fetch(`${API_URL}/stories`, {
-    method: "POST",
-    headers: {
-      storybook_auth_token: storybookToken,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
+  if (!storybookToken) return Promise.reject("No token");
+
+  const gzippedBody = gzip(
+    JSON.stringify({
       html: HTML,
       css: CSS,
       fingerprint,
@@ -77,7 +74,17 @@ export const createStoryRequest = async (args: CreateStoryArgs) => {
       default_css: defaultCSS,
       default_html: defaultHTML,
       with_variants: true,
-    }),
+    })
+  );
+
+  return fetch(`${API_URL}/stories`, {
+    method: "POST",
+    headers: {
+      storybook_auth_token: storybookToken,
+      "Content-Type": "application/json",
+      "Content-Encoding": "gzip",
+    },
+    body: gzippedBody,
   });
 };
 
