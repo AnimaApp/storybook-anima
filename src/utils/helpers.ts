@@ -47,3 +47,12 @@ export const downloadAsJSON = (data: Record<string, any>) => {
   link.click();
   document.body.removeChild(link);
 };
+
+// Source: https://stackoverflow.com/a/6234804/18342693
+export const escapeHtml = (html: string) =>
+  html
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
