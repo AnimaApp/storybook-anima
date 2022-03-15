@@ -1,6 +1,6 @@
 {
   "name": "storybook-anima",
-  "version": "1.0.8",
+  "version": "1.2.0",
   "description": "Anima's Storybook addon for exporting components to Figma",
   "main": "dist/index.js",
   "files": [
@@ -26,9 +26,15 @@
     "@mui/material": "^5.3.0",
     "@storybook/addons": "^6.4.14",
     "@storybook/source-loader": "^6.4.14",
+    "flat": "^5.0.2",
+    "lodash": "^4.17.21",
+    "mitt": "^3.0.0",
+    "object-hash": "^3.0.0",
     "pako": "^2.0.4",
     "react": "^17.0.2",
-    "react-dom": "^17.0.2"
+    "react-dom": "^17.0.2",
+    "react-tiny-popover": "^7.0.1",
+    "react-transition-group": "^4.4.2"
   },
   "peerDependencies": {
     "@storybook/addon-essentials": ">= 6.4.13",
@@ -38,6 +44,10 @@
     "@storybook/addon-actions": "^6.4.13",
     "@storybook/addon-essentials": "^6.4.13",
     "@storybook/react": "^6.4.13",
+    "@types/flat": "^5.0.2",
+    "@types/lodash-es": "^4.17.6",
+    "@types/object-hash": "^2.2.1",
+    "@types/pako": "^1.0.3",
     "@types/react-dom": "^17.0.11",
     "chromatic": "^6.4.3",
     "rollup": "^2.64.0",

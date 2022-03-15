@@ -66,7 +66,7 @@ export const createAlert = (text: string): HTMLElement => {
             line-height: 24px;
             color: #fff;
             font-size: 13px;
-            font-family: Inter, sans-serif;
+            font-family: Mulish, sans-serif;
           `.styles
         }" >${text}</span>
       </div>
