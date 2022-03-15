@@ -1,0 +1,114 @@
+import { Meta } from "@storybook/addon-docs";
+import Arrow from "./assets/arrow.svg";
+import Illustration from "./assets/storybook-to-anima.svg";
+
+<Meta title="Getting started" />
+
+<style>
+  {`
+  .sbdocs-wrapper {
+    padding-top: 220px;
+  }
+  .sbdocs-content {
+    text-align: center;
+    max-width: 600px;
+  }
+  .arrow-one{
+    position: absolute;
+    left: 432px;
+    top: 12px;
+    text-align: left;
+    animation: fade-in 1.2s cubic-bezier(0.390, 0.575, 0.565, 1.000) 0.55s both;
+  }
+  /* Adjust position of arrow in chrome/firefox */
+  @media screen and (-webkit-min-device-pixel-ratio:0) and (min-resolution:.001dpcm) {
+    .arrow-one{ 
+      left: 403px; 
+      }
+  }
+  .arrow-two{
+    text-align: left;
+    position: absolute;
+    left: 18px;
+    top: 134px;
+    animation: fade-in 1.2s cubic-bezier(0.390, 0.575, 0.565, 1.000) both;
+  }
+  .circle{
+    width: 32px;
+    height: 32px;
+    background: #FF6250;
+    border-radius: 63px;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 18px;
+    color: white;
+  }
+  .message {
+    display: flex;
+    flex-direction: row;
+    gap: 12px;
+  }
+  .message > span {
+    width: 136px;
+    text-align: left;
+    padding-top: 8px;
+    font-size: 14px;
+    line-height: 22px;
+  }
+
+
+  @-webkit-keyframes fade-in {
+    0% {
+      opacity: 0;
+    }
+    100% {
+      opacity: 1;
+    }
+  }
+  @keyframes fade-in {
+    0% {
+      opacity: 0;
+    }
+    100% {
+      opacity: 1;
+    }
+  }
+
+
+`}
+</style>
+
+<div className="arrow-one">
+  <img
+    src={Arrow}
+    alt="Arrow"
+    style={{ transform: "rotate(-45deg)", width: "42px" }}
+  />
+  <div className="message" style={{ paddingTop: "10px", marginLeft: "-10px" }}>
+    <div className="circle">2</div>
+    <span>Then click on the Anima button to export component to Figma</span>
+  </div>
+</div>
+<div className="arrow-two">
+  <img
+    src={Arrow}
+    alt="Arrow"
+    style={{ transform: "rotate(-135deg)", width: "42px" }}
+  />
+  <div className="message" style={{ paddingLeft: "24px" }}>
+    <div className="circle">1</div>
+    <span>First select the Story you want to export</span>
+  </div>
+</div>
+
+<img src={Illustration} style={{ width: 230, paddingBottom: 40 }} />
+
+# Welcome to Anima's Storybook
+
+This is a sample storybook we've created for you to test out importing some components into your Figma file.
+
+Go ahead and select a component from the left sidebar, like this [**Button**](/story/material-ui-button--button) for example.
+Then import it to Figma by clicking on the Anima button on the top bar.

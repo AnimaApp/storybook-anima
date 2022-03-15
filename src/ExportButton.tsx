@@ -161,7 +161,11 @@ const doExport = async (
       const stories = Object.entries(state.storiesHash);
       const componentStories = stories
         .map(([_, story]) => story)
-        .filter((story) => story.isComponent);
+        .filter(
+          (story) =>
+            story.isComponent &&
+            !(story.parameters || { docsOnly: false })["docsOnly"]
+        );
 
       channel.emit(EXPORT_ALL_STORIES, { stories: componentStories });
     }
