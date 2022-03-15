@@ -1,7 +1,7 @@
 {
   "name": "storybook-anima",
   "version": "1.2.0",
-  "description": "A Storybook addon for Anima",
+  "description": "Anima's Storybook addon for exporting components to Figma",
   "main": "dist/index.js",
   "files": [
     "dist/**/*",
@@ -9,9 +9,13 @@
     "*.js"
   ],
   "keywords": [
-    "storybook",
-    "addons"
+    "storybook-addon",
+    "storybook-to-figma",
+    "anima",
+    "figma",
+    "design"
   ],
+  "homepage": "https://github.com/AnimaApp/storybook-anima",
   "author": "Anima",
   "license": "MIT",
   "dependencies": {
@@ -59,5 +63,9 @@
     "sb:build": "build-storybook",
     "build": "rollup -c && tsc",
     "chromatic": "npx chromatic --project-token=37438085fe24"
+  },
+  "storybook": {
+    "displayName": "Anima",
+    "icon": "https://user-images.githubusercontent.com/1323193/157461790-52dc5857-2520-4ea8-84d0-bbeed32b4657.png"
   }
 }
