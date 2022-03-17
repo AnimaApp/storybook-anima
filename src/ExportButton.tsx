@@ -11,6 +11,7 @@ import {
   State,
 } from "@storybook/api";
 import {
+  authenticate,
   createStoryRequest,
   escapeHtml,
   getStorybookToken,
@@ -79,6 +80,7 @@ const populateSeedObjectBasedOnArgType = (
   const argOptions = getArgOptions(arg);
   switch (argType) {
     case "select":
+    case "radio":
       seedObject[argKey] = choice(...argOptions);
       break;
     case "boolean":
@@ -122,7 +124,7 @@ const getVariants = (
       const arg = argTypes[key];
       const argType = getArgType(arg);
 
-      if (["select"].includes(argType)) {
+      if (["select", "radio"].includes(argType)) {
         const options = getArgOptions(arg);
         return options.length > 0 ? options[0] : null;
       }
@@ -203,6 +205,9 @@ const createStory = async (
   api.on(STORY_RENDERED, handleSBRender);
 
   const [variants, defaultVariant, defaultVariantHash] = getVariants(story);
+
+  console.log(variants);
+
   parent.postMessage(
     {
       action: EXPORT_START,
@@ -370,10 +375,20 @@ export const ExportButton: React.FC<SProps> = () => {
   }) as any;
 
   useEffect(() => {
+    let mounted = true;
+    if (!isAuthenticated) {
+      authenticate(getStorybookToken()).then((isAuthenticated) => {
+        if (mounted) {
+          setIsAuthenticated(isAuthenticated);
+        }
+      });
+    }
+
     document.addEventListener(EXPORT_SINGLE_STORY, handleChangeStory);
     document.addEventListener(EXPORT_ALL_STORIES, handleExportAllStories);
 
     return () => {
+      mounted = false;
       document.removeEventListener(EXPORT_SINGLE_STORY, handleChangeStory);
       document.removeEventListener(EXPORT_ALL_STORIES, handleExportAllStories);
     };

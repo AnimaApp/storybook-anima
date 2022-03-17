@@ -7,10 +7,9 @@ import {
   EXPORT_PROGRESS,
   EXPORT_SINGLE_STORY,
   EXPORT_START,
-  ON_AUTH,
 } from "./constants";
 import { ExportButton } from "./ExportButton";
-import { authenticate, getStorybookToken, injectCustomStyles } from "./utils";
+import { injectCustomStyles } from "./utils";
 import { get } from "lodash";
 import ReactDOM from "react-dom";
 import Banner from "./components/banner";
@@ -82,10 +81,6 @@ addons.register(ADDON_ID, (api) => {
     channel.on(EXPORT_ALL_STORIES, async ({ stories }) => {
       const ev = new CustomEvent(EXPORT_ALL_STORIES, { detail: { stories } });
       frame.contentDocument.dispatchEvent(ev);
-    });
-
-    authenticate(getStorybookToken()).then((isAuthenticated) => {
-      channel.emit(ON_AUTH, isAuthenticated);
     });
   }
 
