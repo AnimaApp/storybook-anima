@@ -44,7 +44,7 @@ module.exports = {
 ```
 ### 3. Set Anima access token
 
-First get the access token from the Anima Figma plugin, or in your Anima team settings. Learn more about [how to get the token from Anima](https://animaapp.com).
+First get the access token from the Anima Figma plugin, or in your Anima team settings. Learn more about [how to get the token from Anima](https://www.loom.com/share/9f93c49c33824773afdb0fc4658c69e0?utm_source=github).
 
 You can then set the access token as an environment variable called `STORYBOOK_ANIMA_TOKEN`.
 
