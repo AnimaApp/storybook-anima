@@ -185,6 +185,7 @@ const createStory = async (
   const story = api.getCurrentStoryData() as Story;
 
   const storyName = story.name;
+  const storyId = story.id;
 
   let SBRenderCallback = (() => {}) as any;
 
@@ -292,6 +293,7 @@ const createStory = async (
     height,
     name: storyName,
     width,
+    storybookId: storyId,
   });
 };
 
