@@ -30,7 +30,17 @@ import {
 } from "./constants";
 import { STORY_RENDERED } from "@storybook/core-events";
 import { choice, runSeed } from "./utils";
-import { get, has, isEmpty, isNil, isString, omitBy, uniqBy } from "lodash";
+import {
+  get,
+  has,
+  isBoolean,
+  isEmpty,
+  isNil,
+  isString,
+  omit,
+  omitBy,
+  uniqBy,
+} from "lodash";
 import { Args } from "@storybook/addons";
 import md5 from "object-hash";
 import { InputType } from "@storybook/csf";
@@ -222,16 +232,12 @@ const createStory = async (
 
   for (let i = 0; i < orderedVariants.length; i++) {
     const variantHash = get(orderedVariants[i], "hash", "");
-    if (orderedVariants[i]?.hash) {
-      delete orderedVariants[i].hash;
-    }
+    let variant = omit(orderedVariants[i], "hash");
 
-    const variant = Object.keys(orderedVariants[i])
-      .filter(
-        (key) => orderedVariants[i][key] && isString(orderedVariants[i][key])
-      )
+    variant = Object.keys(variant)
+      .filter((key) => isBoolean(variant[key]) || isString(variant[key]))
       .reduce((cur, key) => {
-        return Object.assign(cur, { [key]: orderedVariants[i][key] });
+        return Object.assign(cur, { [key]: variant[key] });
       }, {});
 
     const p = getSBRenderPromise();

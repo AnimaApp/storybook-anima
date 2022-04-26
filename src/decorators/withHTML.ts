@@ -33,9 +33,7 @@ export const withHTML = makeDecorator({
 
       if (root) {
         let rootClone = root.cloneNode(true) as HTMLElement;
-        if (rootClone.childNodes.length > 1) {
-          rootClone.style.width = "fit-content";
-        }
+        rootClone.style.width = "fit-content";
         document.body.appendChild(rootClone);
         const rootRect = rootClone.getBoundingClientRect();
         width = rootRect.width;
