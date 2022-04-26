@@ -14,6 +14,7 @@ interface CreateStoryArgs {
   defaultCSS: string;
   name: string;
   storybookId: string;
+  isSample: boolean;
 }
 
 export const authenticate = async (storybookToken: string) => {
@@ -61,6 +62,7 @@ export const createStoryRequest = async (args: CreateStoryArgs) => {
     defaultCSS,
     defaultHTML,
     storybookId,
+    isSample,
   } = args;
   if (!storybookToken) return Promise.reject("No token");
 
@@ -77,6 +79,7 @@ export const createStoryRequest = async (args: CreateStoryArgs) => {
       default_css: defaultCSS,
       default_html: defaultHTML,
       with_variants: true,
+      is_sample: isSample,
     })
   );
 
