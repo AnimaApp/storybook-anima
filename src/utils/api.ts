@@ -18,7 +18,9 @@ interface CreateStoryArgs {
 }
 
 export const authenticate = async (storybookToken: string) => {
-  if (!storybookToken) return false;
+  const errorRes = { isAuthenticated: false, data: {} };
+
+  if (!storybookToken) return errorRes;
   try {
     const res = await fetch(`${API_URL}/storybook_token/validate`, {
       method: "POST",
@@ -27,10 +29,14 @@ export const authenticate = async (storybookToken: string) => {
       },
       body: JSON.stringify({ storybook_auth_token: storybookToken }),
     });
-    return res.status === 200;
+    if (res.status === 200) {
+      const data = await res.json();
+      return { isAuthenticated: true, data };
+    }
+    return errorRes;
   } catch (error) {
     console.log(error);
-    return false;
+    return errorRes;
   }
 };
 
@@ -48,6 +54,21 @@ export const getStorybookToken = () => {
   }
 
   return STORYBOOK_ANIMA_TOKEN;
+};
+
+export const updateTeamExportStatus = (value: boolean) => {
+  const storybookToken = getStorybookToken();
+  if (!storybookToken) return;
+  fetch(`${API_URL}/teams/update_export_status`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      is_storybook_exporting: value,
+      storybook_auth_token: storybookToken,
+    }),
+  });
 };
 
 export const createStoryRequest = async (args: CreateStoryArgs) => {

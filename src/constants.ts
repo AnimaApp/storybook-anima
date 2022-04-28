@@ -4,8 +4,6 @@ export const PARAM_KEY = "export-stories";
 export const EVENT_CODE_RECEIVED = "EVENT_CODE_RECEIVED";
 export const IFRAME_RENDERER_CLICK = "IFRAME_RENDERER_CLICK";
 
-export const ON_AUTH = "ON_AUTH";
-
 export const EXPORT_START = "EXPORT_START";
 export const EXPORT_END = "EXPORT_END";
 export const EXPORT_SINGLE_STORY = "EXPORT_SINGLE_STORY";

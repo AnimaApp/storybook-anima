@@ -15,8 +15,8 @@ import {
   createStoryRequest,
   escapeHtml,
   getStorybookToken,
-  // getStoryNameFromArgs,
   notify,
+  updateTeamExportStatus,
 } from "./utils";
 import {
   EVENT_CODE_RECEIVED,
@@ -25,7 +25,6 @@ import {
   EXPORT_PROGRESS,
   EXPORT_SINGLE_STORY,
   EXPORT_ALL_STORIES,
-  ON_AUTH,
   IFRAME_RENDERER_CLICK,
 } from "./constants";
 import { STORY_RENDERED } from "@storybook/core-events";
@@ -161,7 +160,14 @@ const doExport = async (
   if (window.location === window.parent.location) {
     if (action === EXPORT_SINGLE_STORY) {
       const story = api.getCurrentStoryData() as Story;
-      channel.emit(EXPORT_SINGLE_STORY, { storyId: story.id });
+      const isComponentStory =
+        story.isComponent &&
+        !(story.parameters || { docsOnly: false })["docsOnly"];
+      if (isComponentStory) {
+        channel.emit(EXPORT_SINGLE_STORY, { storyId: story.id });
+      } else {
+        notify("Oups, you can only export components");
+      }
     }
 
     if (action === EXPORT_ALL_STORIES) {
@@ -329,9 +335,6 @@ export const ExportButton: React.FC<SProps> = () => {
     [EVENT_CODE_RECEIVED]: (data) => {
       storyData.current = data;
     },
-    [ON_AUTH]: (authState) => {
-      setIsAuthenticated(authState);
-    },
     [EXPORT_START]: () => {
       setIsExporting(true);
       // openExportBanner()
@@ -373,6 +376,7 @@ export const ExportButton: React.FC<SProps> = () => {
   const handleExportAllStories = (async (event: CustomEvent) => {
     const stories = get(event, "detail.stories", []);
     try {
+      updateTeamExportStatus(true);
       for (const story of stories) {
         api.selectStory(story.id);
         await doExport(api, state, storyData);
@@ -386,13 +390,15 @@ export const ExportButton: React.FC<SProps> = () => {
         { action: EXPORT_END, source: "anima", error: true },
         "*"
       );
+    } finally {
+      updateTeamExportStatus(false);
     }
   }) as any;
 
   useEffect(() => {
     let mounted = true;
     if (!isAuthenticated) {
-      authenticate(getStorybookToken()).then((isAuthenticated) => {
+      authenticate(getStorybookToken()).then(({ isAuthenticated }) => {
         if (mounted) {
           setIsAuthenticated(isAuthenticated);
         }
@@ -437,7 +443,7 @@ export const ExportButton: React.FC<SProps> = () => {
                 className="sb_popover_list_item"
                 onClick={() => handleExportClick(EXPORT_SINGLE_STORY)}
               >
-                Export only this Component
+                Export only this component
               </li>
               <li
                 onClick={() => handleExportClick(EXPORT_ALL_STORIES)}
