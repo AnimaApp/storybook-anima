@@ -15,6 +15,7 @@ import {
   createStoryRequest,
   escapeHtml,
   getStorybookToken,
+  isDocsStory,
   notify,
   updateTeamExportStatus,
 } from "./utils";
@@ -160,10 +161,8 @@ const doExport = async (
   if (window.location === window.parent.location) {
     if (action === EXPORT_SINGLE_STORY) {
       const story = api.getCurrentStoryData() as Story;
-      const isComponentStory =
-        story.isComponent &&
-        !(story.parameters || { docsOnly: false })["docsOnly"];
-      if (isComponentStory) {
+
+      if (!isDocsStory(story)) {
         channel.emit(EXPORT_SINGLE_STORY, { storyId: story.id });
       } else {
         notify("Oups, you can only export components");
@@ -174,11 +173,7 @@ const doExport = async (
       const stories = Object.entries(state.storiesHash);
       const componentStories = stories
         .map(([_, story]) => story)
-        .filter(
-          (story) =>
-            story.isComponent &&
-            !(story.parameters || { docsOnly: false })["docsOnly"]
-        );
+        .filter((story: Story) => !isDocsStory(story));
 
       channel.emit(EXPORT_ALL_STORIES, { stories: componentStories });
     }

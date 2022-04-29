@@ -1,3 +1,4 @@
+import { Story } from "@storybook/api";
 import { createAlert } from "../components/alert";
 
 export const isString = (value: any) =>
@@ -56,3 +57,7 @@ export const escapeHtml = (html: string) =>
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
+
+export const isDocsStory = (story: Story) => {
+  return !!story.parameters?.docsOnly;
+};
