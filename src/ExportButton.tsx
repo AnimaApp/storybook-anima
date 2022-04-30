@@ -265,7 +265,6 @@ const createStory = async (
 
     const variantID = escapeHtml(variantData.join(",") || "default");
     const variantHTML = `<div data-fg-description="${snippetCodeAsBase64}" data-variant="${variantID}" data-variant-id="${variantHash}">${data.current.html}</div>`;
-    console.log(variantHTML);
     const variantCSS = data.current.css;
 
     if (variantHash === defaultVariantHash) {
