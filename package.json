@@ -25,6 +25,7 @@
     "@mui/icons-material": "^5.3.0",
     "@mui/material": "^5.3.0",
     "@storybook/addons": "^6.4.14",
+    "@storybook/docs-tools": "^6.5.0-alpha.48",
     "@storybook/source-loader": "^6.4.14",
     "flat": "^5.0.2",
     "lodash": "^4.17.21",
