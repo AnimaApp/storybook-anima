@@ -61,3 +61,22 @@ export const escapeHtml = (html: string) =>
 export const isDocsStory = (story: Story) => {
   return !!story.parameters?.docsOnly;
 };
+
+export const getEventHandlerAsPromise = () => {
+  let callback = (() => {}) as any;
+  const promise = () => {
+    return new Promise((resolve) => {
+      callback = resolve;
+    });
+  };
+
+  const handler = (...args) => {
+    setTimeout(() => {
+      process.nextTick(() => {
+        callback(args);
+      });
+    }, 0);
+  };
+
+  return [handler, promise];
+};

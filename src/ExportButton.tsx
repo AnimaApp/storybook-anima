@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { IconButton } from "@storybook/components";
 import { Popover } from "react-tiny-popover";
+import { SNIPPET_RENDERED } from "@storybook/docs-tools";
 
 import {
   API,
@@ -14,6 +15,7 @@ import {
   authenticate,
   createStoryRequest,
   escapeHtml,
+  getEventHandlerAsPromise,
   getStorybookToken,
   isDocsStory,
   notify,
@@ -193,23 +195,12 @@ const createStory = async (
   const storyName = story.name;
   const storyId = story.id;
 
-  let SBRenderCallback = (() => {}) as any;
+  const [handleStoryRender, getStoryRenderPromise] = getEventHandlerAsPromise();
+  const [handleSnippetRender, getSnippetRenderPromise] =
+    getEventHandlerAsPromise();
 
-  const getSBRenderPromise = () => {
-    return new Promise((resolve) => {
-      SBRenderCallback = resolve;
-    });
-  };
-
-  const handleSBRender = () => {
-    setTimeout(() => {
-      process.nextTick(() => {
-        SBRenderCallback();
-      });
-    }, 0);
-  };
-
-  api.on(STORY_RENDERED, handleSBRender);
+  api.on(STORY_RENDERED, handleStoryRender);
+  api.on(SNIPPET_RENDERED, handleSnippetRender);
 
   const [variants, defaultVariant, defaultVariantHash] = getVariants(story);
 
@@ -241,10 +232,19 @@ const createStory = async (
         return Object.assign(cur, { [key]: variant[key] });
       }, {});
 
-    const p = getSBRenderPromise();
-
+    const storyRenderPromise =
+      getStoryRenderPromise() as unknown as Promise<string>;
+    const snippetRenderPromise =
+      getSnippetRenderPromise() as unknown as Promise<[string, string]>;
     api.updateStoryArgs(story, variant);
-    await p;
+
+    const [, snippetResult] = await Promise.all([
+      storyRenderPromise,
+      snippetRenderPromise,
+    ]);
+
+    const [, snippetCode] = snippetResult;
+    const snippetCodeAsBase64 = window.btoa(snippetCode);
 
     window.parent.postMessage(
       {
@@ -264,7 +264,7 @@ const createStory = async (
     );
 
     const variantID = escapeHtml(variantData.join(",") || "default");
-    const variantHTML = `<div data-variant='${variantID}' data-variant-id="${variantHash}">${data.current.html}</div>`;
+    const variantHTML = `<div data-fg-description="${snippetCodeAsBase64}" data-variant="${variantID}" data-variant-id="${variantHash}">${data.current.html}</div>`;
     const variantCSS = data.current.css;
 
     if (variantHash === defaultVariantHash) {
@@ -296,7 +296,7 @@ const createStory = async (
 
   const isSample = window.location.hostname === "animaapp.github.io";
 
-  return createStoryRequest({
+  const payload = {
     storybookToken: getStorybookToken(),
     fingerprint,
     CSS,
@@ -308,7 +308,9 @@ const createStory = async (
     width,
     storybookId: storyId,
     isSample,
-  });
+  };
+
+  return createStoryRequest(payload);
 };
 
 export const ExportButton: React.FC<SProps> = () => {
