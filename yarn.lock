@@ -1798,7 +1798,7 @@
 
 "@storybook/addons@6.5.0-alpha.48":
   version "6.5.0-alpha.48"
-  resolved "https://npm.animaapp.com/@storybook%2faddons/-/addons-6.5.0-alpha.48.tgz#73a01d8e29513bbc93c1e8e576f1846d7fe5ea4a"
+  resolved "https://registry.yarnpkg.com/@storybook%2faddons/-/addons-6.5.0-alpha.48.tgz#73a01d8e29513bbc93c1e8e576f1846d7fe5ea4a"
   integrity sha512-UA3gyygTdTKmtW/+D3yP5V4a5EArqnQSDOSHpnohCz8iWt9VKvsBCl9n5lU7EGxGcKxZHEgM2oz4XkVQX45z4A==
   dependencies:
     "@storybook/api" "6.5.0-alpha.48"
@@ -1861,7 +1861,7 @@
 
 "@storybook/api@6.5.0-alpha.48":
   version "6.5.0-alpha.48"
-  resolved "https://npm.animaapp.com/@storybook%2fapi/-/api-6.5.0-alpha.48.tgz#bd4bc02bc367ca2d3160945485ae1929e1492717"
+  resolved "https://registry.yarnpkg.com/@storybook%2fapi/-/api-6.5.0-alpha.48.tgz#bd4bc02bc367ca2d3160945485ae1929e1492717"
   integrity sha512-Bv5M8Ly09Omu5Q8hWtGr0vLe3ueS2XZ3pt5LFyE3oYFfFD38T36to+quprSzmMHeuBqKvV2In/pp+VEf6Q0ZQQ==
   dependencies:
     "@storybook/channels" "6.5.0-alpha.48"
@@ -2001,7 +2001,7 @@
 
 "@storybook/channels@6.5.0-alpha.48":
   version "6.5.0-alpha.48"
-  resolved "https://npm.animaapp.com/@storybook%2fchannels/-/channels-6.5.0-alpha.48.tgz#945cbc88d23d88b08fd0e73130adf7e135113eb3"
+  resolved "https://registry.yarnpkg.com/@storybook%2fchannels/-/channels-6.5.0-alpha.48.tgz#945cbc88d23d88b08fd0e73130adf7e135113eb3"
   integrity sha512-MSdzTw+OwuYUMqm2yh+sdalfDB4YQm7C5Qo2vI9HOy7PtRwdg/Ccpku2fDmSrBeaXXRJS875OUGoWoS/EkcMeQ==
   dependencies:
     core-js "^3.8.2"
@@ -2052,7 +2052,7 @@
 
 "@storybook/client-logger@6.5.0-alpha.48":
   version "6.5.0-alpha.48"
-  resolved "https://npm.animaapp.com/@storybook%2fclient-logger/-/client-logger-6.5.0-alpha.48.tgz#b080fe83786678cc59c4463c258465ea169a5381"
+  resolved "https://registry.yarnpkg.com/@storybook%2fclient-logger/-/client-logger-6.5.0-alpha.48.tgz#b080fe83786678cc59c4463c258465ea169a5381"
   integrity sha512-K9dQDOe5l7/zF9AvW668RjSHsNxQWthms8rNB2y5rqviLYCXB7Ynz34hOHSagtkS1aVWoco878FmqG2gF5rJHQ==
   dependencies:
     core-js "^3.8.2"
@@ -2185,7 +2185,7 @@
 
 "@storybook/core-events@6.5.0-alpha.48":
   version "6.5.0-alpha.48"
-  resolved "https://npm.animaapp.com/@storybook%2fcore-events/-/core-events-6.5.0-alpha.48.tgz#5b6cda700451c3090ed74b4d0d1e270839efb220"
+  resolved "https://registry.yarnpkg.com/@storybook%2fcore-events/-/core-events-6.5.0-alpha.48.tgz#5b6cda700451c3090ed74b4d0d1e270839efb220"
   integrity sha512-aKOcZLm3Xi0hclRJ5EEdg0UsIw0iLQU4CESbRammqA+phdb15z1L0HaXYJuCYxSdhDf9/A2Y3LfuxEqSMBEKkA==
   dependencies:
     core-js "^3.8.2"
@@ -2278,7 +2278,7 @@
 
 "@storybook/docs-tools@^6.5.0-alpha.48":
   version "6.5.0-alpha.48"
-  resolved "https://npm.animaapp.com/@storybook%2fdocs-tools/-/docs-tools-6.5.0-alpha.48.tgz#dab666c55b8119f2632e2153e59be00934cbe78d"
+  resolved "https://registry.yarnpkg.com/@storybook%2fdocs-tools/-/docs-tools-6.5.0-alpha.48.tgz#dab666c55b8119f2632e2153e59be00934cbe78d"
   integrity sha512-KQHReU6cQbFYEaN5Np3DFs4/f7jq38VpPGjn340tLrC/RBSkPMvCmMEn/6l+3MZplL8EbcgZ+gGe+HKbCM1Sng==
   dependencies:
     "@babel/core" "^7.12.10"
@@ -2450,7 +2450,7 @@
 
 "@storybook/router@6.5.0-alpha.48":
   version "6.5.0-alpha.48"
-  resolved "https://npm.animaapp.com/@storybook%2frouter/-/router-6.5.0-alpha.48.tgz#3700ade01e102a221988d75119ae264aad3323e2"
+  resolved "https://registry.yarnpkg.com/@storybook%2frouter/-/router-6.5.0-alpha.48.tgz#3700ade01e102a221988d75119ae264aad3323e2"
   integrity sha512-+BBF2csb4cCF+dQN7qosHn1GCYGhY9kz2x9TGRMcha3xuATdTTKTVtnXOzCV7qoL2MjnG9993kJKMit5oWlJoQ==
   dependencies:
     "@storybook/client-logger" "6.5.0-alpha.48"
@@ -2520,7 +2520,7 @@
 
 "@storybook/store@6.5.0-alpha.48":
   version "6.5.0-alpha.48"
-  resolved "https://npm.animaapp.com/@storybook%2fstore/-/store-6.5.0-alpha.48.tgz#b6cf03d5cbbdec0ee4bf6b14ee196b7b9adf087c"
+  resolved "https://registry.yarnpkg.com/@storybook%2fstore/-/store-6.5.0-alpha.48.tgz#b6cf03d5cbbdec0ee4bf6b14ee196b7b9adf087c"
   integrity sha512-ekxOtdI5ZLMQgnTJAetRdbpf/2rdpV8rvwf2PW2XNOMnvqehE19bK43IXqNqc55pFjOrSlcQzSehwG+HBmyltw==
   dependencies:
     "@storybook/addons" "6.5.0-alpha.48"
@@ -2577,7 +2577,7 @@
 
 "@storybook/theming@6.5.0-alpha.48":
   version "6.5.0-alpha.48"
-  resolved "https://npm.animaapp.com/@storybook%2ftheming/-/theming-6.5.0-alpha.48.tgz#58ef1677beba1450dde1f1617521c831e16f3f20"
+  resolved "https://registry.yarnpkg.com/@storybook%2ftheming/-/theming-6.5.0-alpha.48.tgz#58ef1677beba1450dde1f1617521c831e16f3f20"
   integrity sha512-9ITYtfJ/qgNTJayTdztn9QLVr0NJL8Npz700TgoPXxsfFBhGtOoCi3UkxBUHpDgsbGlEIB9Ccm38ngoAVDsN1Q==
   dependencies:
     "@storybook/client-logger" "6.5.0-alpha.48"
