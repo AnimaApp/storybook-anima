@@ -1,8 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { IconButton } from "@storybook/components";
-import { Popover } from "react-tiny-popover";
-import { SNIPPET_RENDERED } from "@storybook/docs-tools";
-
+import md5 from "object-hash";
+import { InputType } from "@storybook/csf";
 import {
   API,
   useChannel,
@@ -11,8 +10,24 @@ import {
   useStorybookState,
   State,
 } from "@storybook/api";
+import { Args } from "@storybook/addons";
+import { SNIPPET_RENDERED } from "@storybook/docs-tools";
+import { STORY_RENDERED } from "@storybook/core-events";
+import { Popover } from "react-tiny-popover";
 import {
-  authenticate,
+  get,
+  has,
+  isBoolean,
+  isEmpty,
+  isNil,
+  isString,
+  omit,
+  omitBy,
+  uniqBy,
+} from "lodash";
+
+import {
+  CreateStoryArgs,
   createStoryRequest,
   escapeHtml,
   getEventHandlerAsPromise,
@@ -29,28 +44,13 @@ import {
   EXPORT_SINGLE_STORY,
   EXPORT_ALL_STORIES,
   IFRAME_RENDERER_CLICK,
+  GET_AUTH,
+  SET_AUTH,
+  SAMPLE_STORYBOOK_HOST,
 } from "./constants";
-import { STORY_RENDERED } from "@storybook/core-events";
 import { choice, runSeed } from "./utils";
-import {
-  get,
-  has,
-  isBoolean,
-  isEmpty,
-  isNil,
-  isString,
-  omit,
-  omitBy,
-  uniqBy,
-} from "lodash";
-import { Args } from "@storybook/addons";
-import md5 from "object-hash";
-import { InputType } from "@storybook/csf";
 
-interface SProps {
-  api: API;
-}
-
+interface SProps {}
 interface StoryData {
   html: string;
   css: string;
@@ -58,7 +58,7 @@ interface StoryData {
   height: number;
 }
 
-const validArgTypes = ["select", "radio", "boolean"];
+const SUPPORTED_ARG_TYPES = ["select", "radio", "boolean"];
 
 const getArgType = (arg: InputType): string => {
   let argType = "";
@@ -110,7 +110,7 @@ const getVariants = (
       const arg = argTypes[argKey];
       const argType = getArgType(arg);
 
-      if (validArgTypes.includes(argType)) {
+      if (SUPPORTED_ARG_TYPES.includes(argType)) {
         seedObj[argKey] = has(storyDefaultArgs, argKey)
           ? storyDefaultArgs[argKey]
           : has(storyArgs, argKey)
@@ -155,41 +155,41 @@ const getVariants = (
 const doExport = async (
   api: API,
   state: State,
-  data: React.MutableRefObject<StoryData>,
   action = "create-single-story"
 ) => {
   const channel = api.getChannel();
+  const isMainThread = window.location === window.parent.location;
 
-  if (window.location === window.parent.location) {
-    if (action === EXPORT_SINGLE_STORY) {
-      const story = api.getCurrentStoryData() as Story;
+  if (!isMainThread) return Promise.resolve(false);
 
-      if (!isDocsStory(story)) {
-        channel.emit(EXPORT_SINGLE_STORY, { storyId: story.id });
-      } else {
-        notify("Oups, you can only export components");
-      }
+  // If we are on the main thread, we need to send the request to the worker iframe
+
+  if (action === EXPORT_SINGLE_STORY) {
+    const story = api.getCurrentStoryData() as Story;
+
+    if (!isDocsStory(story)) {
+      channel.emit(EXPORT_SINGLE_STORY, { storyId: story.id });
+    } else {
+      notify("Oups, you can only export components");
     }
-
-    if (action === EXPORT_ALL_STORIES) {
-      const stories = Object.entries(state.storiesHash);
-      const componentStories = stories
-        .map(([_, story]) => story)
-        .filter((story: Story) => !isDocsStory(story));
-
-      channel.emit(EXPORT_ALL_STORIES, { stories: componentStories });
-    }
-
-    return Promise.resolve(true);
   }
 
-  return createStory(api, data);
+  if (action === EXPORT_ALL_STORIES) {
+    const stories = Object.entries(state.storiesHash);
+    const componentStories = stories
+      .map(([_, story]) => story)
+      .filter((story: Story) => !isDocsStory(story) && story.isLeaf);
+
+    channel.emit(EXPORT_ALL_STORIES, { stories: componentStories });
+  }
+
+  return Promise.resolve(true);
 };
 
-const createStory = async (
+const getStoryPayload = async (
   api: API,
   data: React.MutableRefObject<StoryData>
-) => {
+): Promise<CreateStoryArgs> => {
   const story = api.getCurrentStoryData() as Story;
 
   const storyName = story.name;
@@ -294,7 +294,7 @@ const createStory = async (
 
   const { height, width } = data.current;
 
-  const isSample = window.location.hostname === "animaapp.github.io";
+  const isSample = window.location.hostname === SAMPLE_STORYBOOK_HOST;
 
   const payload = {
     storybookToken: getStorybookToken(),
@@ -310,7 +310,7 @@ const createStory = async (
     isSample,
   };
 
-  return createStoryRequest(payload);
+  return payload;
 };
 
 export const ExportButton: React.FC<SProps> = () => {
@@ -326,6 +326,9 @@ export const ExportButton: React.FC<SProps> = () => {
   });
 
   useChannel({
+    [SET_AUTH]: (isAuth) => {
+      setIsAuthenticated(isAuth);
+    },
     [IFRAME_RENDERER_CLICK]: () => {
       setIsPopoverOpen(false);
     },
@@ -334,7 +337,6 @@ export const ExportButton: React.FC<SProps> = () => {
     },
     [EXPORT_START]: () => {
       setIsExporting(true);
-      // openExportBanner()
     },
     [EXPORT_END]: ({ error = false } = {}) => {
       setIsExporting(false);
@@ -348,74 +350,90 @@ export const ExportButton: React.FC<SProps> = () => {
   const api = useStorybookApi();
   const state = useStorybookState();
 
-  const handleChangeStory = ((event: CustomEvent) => {
-    // api.selectStory(kindOeId);
+  // Export button click trigger (triggered only in the main thread)
+  const handleExportClick = (action: string) => {
+    doExport(api, state, action);
+    setIsPopoverOpen(false);
+  };
 
-    const storyId = get(event, "detail.storyId", null);
-    if (storyId) {
-      api.selectStory(storyId);
-      doExport(api, state, storyData)
-        .then(() => {
-          parent.postMessage(
-            { action: EXPORT_END, source: "anima", error: null },
-            "*"
-          );
-        })
-        .catch(() => {
-          parent.postMessage(
-            { action: EXPORT_END, source: "anima", error: true },
-            "*"
-          );
-        });
-    }
-  }) as any;
+  const handleExportError = (e: any) => {
+    console.error(e);
+    parent.postMessage(
+      { action: EXPORT_END, source: "anima", data: { error: true } },
+      "*"
+    );
+  };
 
-  const handleExportAllStories = (async (event: CustomEvent) => {
-    const stories = get(event, "detail.stories", []);
+  // Export single story handler
+  const handleExportSingleStory = async (event: CustomEvent) => {
     try {
+      const storyId = get(event, "detail.storyId", null);
+      if (storyId) {
+        try {
+          api.selectStory(storyId);
+          const storyPayload = await getStoryPayload(api, storyData);
+          await createStoryRequest(storyPayload);
+          parent.postMessage(
+            { action: EXPORT_END, source: "anima", data: { error: null } },
+            "*"
+          );
+        } catch (error) {
+          handleExportError(error);
+        }
+      }
+    } catch (error) {
+      handleExportError(error);
+    } finally {
+    }
+  };
+
+  // Export full library handler
+  const handleExportAllStories = async (event: CustomEvent) => {
+    try {
+      const stories = get(event, "detail.stories", []);
       updateTeamExportStatus(true);
       for (const story of stories) {
-        api.selectStory(story.id);
-        await doExport(api, state, storyData);
+        try {
+          api.selectStory(story.id);
+          const storyPayload = await getStoryPayload(api, storyData);
+          await createStoryRequest(storyPayload);
+        } catch (error) {
+          handleExportError(error);
+          continue;
+        }
       }
       parent.postMessage(
-        { action: EXPORT_END, source: "anima", error: null },
+        { action: EXPORT_END, source: "anima", data: { error: null } },
         "*"
       );
     } catch (error) {
-      parent.postMessage(
-        { action: EXPORT_END, source: "anima", error: true },
-        "*"
-      );
+      handleExportError(error);
     } finally {
       updateTeamExportStatus(false);
     }
-  }) as any;
+  };
 
   useEffect(() => {
-    let mounted = true;
-    if (!isAuthenticated) {
-      authenticate(getStorybookToken()).then(({ isAuthenticated }) => {
-        if (mounted) {
-          setIsAuthenticated(isAuthenticated);
-        }
-      });
+    if (isMainThread) {
+      api.getChannel().emit(GET_AUTH);
+    } else {
+      document.addEventListener(EXPORT_SINGLE_STORY, handleExportSingleStory);
+      document.addEventListener(EXPORT_ALL_STORIES, handleExportAllStories);
     }
 
-    document.addEventListener(EXPORT_SINGLE_STORY, handleChangeStory);
-    document.addEventListener(EXPORT_ALL_STORIES, handleExportAllStories);
-
     return () => {
-      mounted = false;
-      document.removeEventListener(EXPORT_SINGLE_STORY, handleChangeStory);
-      document.removeEventListener(EXPORT_ALL_STORIES, handleExportAllStories);
+      if (!isMainThread) {
+        document.removeEventListener(
+          EXPORT_SINGLE_STORY,
+          handleExportSingleStory
+        );
+        document.removeEventListener(
+          EXPORT_ALL_STORIES,
+          handleExportAllStories
+        );
+      }
     };
   }, []);
-
-  const handleExportClick = (action: string = "create-single-story") => {
-    doExport(api, state, storyData, action);
-    setIsPopoverOpen(false);
-  };
 
   return (
     <>

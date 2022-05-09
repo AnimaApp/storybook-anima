@@ -74,17 +74,6 @@ const Banner: React.FC<IProps> = (props) => {
           }}
           className="anima_export_banner"
         >
-          {/* <div
-            style={
-              {
-                "--width": `${(progress.current / progress.total) * 100}%`,
-              } as any
-            }
-            className="anima_export_banner_progress"
-          >
-            <div className="anima_export_banner_progress_inner"></div>
-          </div> */}
-
           <div className="anima_export_banner_content">
             <svg
               style={{ marginRight: "20px" }}
