@@ -3,7 +3,7 @@ import { capitalize, isBoolean, isString } from "./helpers";
 import { Args } from "@storybook/api";
 import { gzip } from "pako";
 
-interface CreateStoryArgs {
+export interface CreateStoryArgs {
   storybookToken: string;
   fingerprint: string;
   HTML: string;
@@ -85,7 +85,7 @@ export const createStoryRequest = async (args: CreateStoryArgs) => {
     storybookId,
     isSample,
   } = args;
-  if (!storybookToken) return Promise.reject("No token");
+  if (!storybookToken) throw new Error("No storybook token");
 
   const gzippedBody = gzip(
     JSON.stringify({

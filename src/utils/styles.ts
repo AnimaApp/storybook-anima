@@ -1,3 +1,4 @@
+import { ANIMA_FONT_EL_SELECTOR } from "../constants";
 import { createElementFromHTML } from "./helpers";
 
 const GLOBAL_STYLES = `
@@ -76,7 +77,7 @@ const GLOBAL_STYLES = `
 `;
 
 export const injectCustomStyles = () => {
-  const customFont = document.querySelector("#anima-custom-font");
+  const customFont = document.querySelector(ANIMA_FONT_EL_SELECTOR);
   !customFont &&
     document.head.appendChild(
       createElementFromHTML(
