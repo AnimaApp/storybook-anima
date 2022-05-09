@@ -5,7 +5,7 @@ module.exports = {
   ],
   addons: [
     "@storybook/addon-essentials",
-    "../dist/preset",
+    "../preset",
   ],
   framework: "@storybook/react",
 };
