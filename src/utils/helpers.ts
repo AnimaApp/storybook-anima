@@ -80,3 +80,6 @@ export const getEventHandlerAsPromise = () => {
 
   return [handler, promise];
 };
+
+export const sleep = <T>(ms: number, returnValue: T): Promise<T> =>
+  new Promise((resolve) => setTimeout(resolve, ms, returnValue));

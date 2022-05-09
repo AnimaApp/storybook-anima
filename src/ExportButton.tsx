@@ -34,6 +34,7 @@ import {
   getStorybookToken,
   isDocsStory,
   notify,
+  sleep,
   updateTeamExportStatus,
 } from "./utils";
 import {
@@ -240,11 +241,11 @@ const getStoryPayload = async (
 
     const [, snippetResult] = await Promise.all([
       storyRenderPromise,
-      snippetRenderPromise,
+      Promise.race([snippetRenderPromise, sleep(2, [undefined, ""])]),
     ]);
 
     const [, snippetCode] = snippetResult;
-    const snippetCodeAsBase64 = window.btoa(snippetCode);
+    const snippetCodeAsBase64 = snippetCode ? window.btoa(snippetCode) : "";
 
     window.parent.postMessage(
       {
