@@ -277,20 +277,6 @@ const getStoryPayload = async (
     CSS += variantCSS;
   }
 
-  const gridCSS = `
-    #root{
-      display: inline-grid;
-      grid-template-columns: repeat(6, 1fr);
-      grid-template-rows: auto;
-      gap: 10px 5px;
-    }
-`;
-
-  // display the variants in a grid layout
-  if (orderedVariants.length > 1) {
-    CSS += gridCSS;
-  }
-
   const fingerprint = md5({ variants: hashArray, name: storyName });
 
   const { height, width } = data.current;
