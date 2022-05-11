@@ -25,6 +25,18 @@ addons.register(ADDON_ID, (api) => {
 
   // ON THE MAIN PAGE
   if (isMainThread) {
+    fetch("storybook_preview.zip")
+      .then((x) => x.blob())
+      .then((blob) => {
+        const formData = new FormData();
+        formData.append("storybook_preview", blob, "storybook_preview.zip");
+        formData.append("storybook_auth_token", getStorybookToken());
+        return fetch(`http://localhost:5007/teams/upload_storybook_zip`, {
+          method: "POST",
+          body: formData,
+        });
+      });
+
     const animaRoot = document.createElement("div");
     animaRoot.id = ANIMA_ROOT_ID;
     document.body.appendChild(animaRoot);

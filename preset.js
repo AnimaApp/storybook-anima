@@ -1,4 +1,8 @@
+const path = require("path");
 const core = require("@storybook/core-common");
+const ZipPlugin = require("zip-webpack-plugin");
+const SourceLoaderPlugin = require("./webpack/sourceLoader");
+
 function managerEntries(entry = []) {
   return [...entry, require.resolve("./dist/register")];
 }
@@ -10,8 +14,6 @@ function config(entry = [], { addDecorator = true }) {
   }
   return [...entry, ...addonConfig];
 }
-
-
 
 module.exports = {
   managerEntries,
@@ -29,6 +31,14 @@ module.exports = {
       include: [core.getProjectRoot()],
       exclude: /node_modules/,
     });
+
+    const sourcePluginConfig = {
+      path: path.join(core.getProjectRoot(), ".anima"),
+      filename: "storybook_preview.zip",
+    };
+
+    config.plugins.push(new ZipPlugin({ ...sourcePluginConfig }));
+    config.plugins.push(new SourceLoaderPlugin(sourcePluginConfig));
 
     return config;
   },
