@@ -383,7 +383,7 @@ export const ExportButton: React.FC<SProps> = () => {
       const stories = get(event, "detail.stories", []);
       sendExportSignal({
         isExporting: true,
-        event: "storybook-addon.export.full.library.clicked",
+        event: "storybook-addon.export-full-library.clicked",
       });
       for (const story of stories) {
         try {
@@ -401,7 +401,7 @@ export const ExportButton: React.FC<SProps> = () => {
       );
       sendExportSignal({
         isExporting: false,
-        event: "storybook-addon.export.full.library.success",
+        event: "storybook-addon.export-full-library.success",
       });
     } catch (error) {
       handleExportError(error);
