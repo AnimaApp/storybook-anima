@@ -35,7 +35,7 @@ import {
   isDocsStory,
   notify,
   sleep,
-  updateTeamExportStatus,
+  sendExportSignal,
 } from "./utils";
 import {
   EVENT_CODE_RECEIVED,
@@ -349,6 +349,9 @@ export const ExportButton: React.FC<SProps> = () => {
       { action: EXPORT_END, source: "anima", data: { error: true } },
       "*"
     );
+    sendExportSignal({
+      isExporting: false,
+    });
   };
 
   // Export single story handler
@@ -378,7 +381,10 @@ export const ExportButton: React.FC<SProps> = () => {
   const handleExportAllStories = async (event: CustomEvent) => {
     try {
       const stories = get(event, "detail.stories", []);
-      updateTeamExportStatus(true);
+      sendExportSignal({
+        isExporting: true,
+        event: "storybook-addon.export.full.library.clicked",
+      });
       for (const story of stories) {
         try {
           api.selectStory(story.id);
@@ -393,10 +399,12 @@ export const ExportButton: React.FC<SProps> = () => {
         { action: EXPORT_END, source: "anima", data: { error: null } },
         "*"
       );
+      sendExportSignal({
+        isExporting: false,
+        event: "storybook-addon.export.full.library.success",
+      });
     } catch (error) {
       handleExportError(error);
-    } finally {
-      updateTeamExportStatus(false);
     }
   };
 

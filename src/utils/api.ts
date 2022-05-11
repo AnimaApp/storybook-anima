@@ -56,7 +56,10 @@ export const getStorybookToken = () => {
   return STORYBOOK_ANIMA_TOKEN;
 };
 
-export const updateTeamExportStatus = (value: boolean) => {
+export const sendExportSignal = (args: {
+  isExporting?: boolean;
+  event?: string;
+}) => {
   const storybookToken = getStorybookToken();
   if (!storybookToken) return;
   fetch(`${API_URL}/teams/update_export_status`, {
@@ -65,8 +68,11 @@ export const updateTeamExportStatus = (value: boolean) => {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      is_storybook_exporting: value,
+      ...("isExporting" in args
+        ? { is_storybook_exporting: args.isExporting }
+        : {}),
       storybook_auth_token: storybookToken,
+      ...(args.event ? { event: args.event } : {}),
     }),
   });
 };
