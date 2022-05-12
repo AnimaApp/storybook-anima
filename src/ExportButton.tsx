@@ -245,7 +245,6 @@ const getStoryPayload = async (
     ]);
 
     const [, snippetCode] = snippetResult;
-    console.warn(snippetCode);
     const snippetCodeAsBase64 = snippetCode ? window.btoa(snippetCode) : "";
 
     window.parent.postMessage(
