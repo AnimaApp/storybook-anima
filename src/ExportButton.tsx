@@ -241,10 +241,11 @@ const getStoryPayload = async (
 
     const [, snippetResult] = await Promise.all([
       storyRenderPromise,
-      Promise.race([snippetRenderPromise, sleep(2, [undefined, ""])]),
+      Promise.race([snippetRenderPromise, sleep(2000, [undefined, ""])]),
     ]);
 
     const [, snippetCode] = snippetResult;
+    console.warn(snippetCode);
     const snippetCodeAsBase64 = snippetCode ? window.btoa(snippetCode) : "";
 
     window.parent.postMessage(
