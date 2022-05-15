@@ -21,6 +21,7 @@ Learn more about the motivations and benefits in our [our blog post](https://blo
 
 -   Storybook@>=6.0.0
 -   [Anima Account](https://www.animaapp.com/figma)
+-   Sign up for [Anima's beta](https://form.typeform.com/to/eNOueDoh)
 -   [Anima's Figma plugin](https://www.figma.com/community/plugin/857346721138427857/Export-to-React%2C-HTML-%26-Vue-code-with-Anima)
 
 This addon should work with any framework. If you find a case that the addon does not work, please open an issue.
