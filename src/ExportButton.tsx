@@ -34,7 +34,8 @@ import {
   getStorybookToken,
   isDocsStory,
   notify,
-  updateTeamExportStatus,
+  sleep,
+  sendExportSignal,
 } from "./utils";
 import {
   EVENT_CODE_RECEIVED,
@@ -240,11 +241,11 @@ const getStoryPayload = async (
 
     const [, snippetResult] = await Promise.all([
       storyRenderPromise,
-      snippetRenderPromise,
+      Promise.race([snippetRenderPromise, sleep(2000, [undefined, ""])]),
     ]);
 
     const [, snippetCode] = snippetResult;
-    const snippetCodeAsBase64 = window.btoa(snippetCode);
+    const snippetCodeAsBase64 = snippetCode ? window.btoa(snippetCode) : "";
 
     window.parent.postMessage(
       {
@@ -274,20 +275,6 @@ const getStoryPayload = async (
 
     HTML += variantHTML;
     CSS += variantCSS;
-  }
-
-  const gridCSS = `
-    #root{
-      display: inline-grid;
-      grid-template-columns: repeat(6, 1fr);
-      grid-template-rows: auto;
-      gap: 10px 5px;
-    }
-`;
-
-  // display the variants in a grid layout
-  if (orderedVariants.length > 1) {
-    CSS += gridCSS;
   }
 
   const fingerprint = md5({ variants: hashArray, name: storyName });
@@ -362,6 +349,9 @@ export const ExportButton: React.FC<SProps> = () => {
       { action: EXPORT_END, source: "anima", data: { error: true } },
       "*"
     );
+    sendExportSignal({
+      isExporting: false,
+    });
   };
 
   // Export single story handler
@@ -391,7 +381,10 @@ export const ExportButton: React.FC<SProps> = () => {
   const handleExportAllStories = async (event: CustomEvent) => {
     try {
       const stories = get(event, "detail.stories", []);
-      updateTeamExportStatus(true);
+      sendExportSignal({
+        isExporting: true,
+        event: "storybook-addon.export-full-library.clicked",
+      });
       for (const story of stories) {
         try {
           api.selectStory(story.id);
@@ -406,10 +399,12 @@ export const ExportButton: React.FC<SProps> = () => {
         { action: EXPORT_END, source: "anima", data: { error: null } },
         "*"
       );
+      sendExportSignal({
+        isExporting: false,
+        event: "storybook-addon.export-full-library.success",
+      });
     } catch (error) {
       handleExportError(error);
-    } finally {
-      updateTeamExportStatus(false);
     }
   };
 
