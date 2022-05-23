@@ -1,4 +1,8 @@
 const path = require("path");
+const fs = require("fs");
+const webpack = require("webpack");
+
+const { RawSource } = webpack.sources || require("webpack-sources");
 
 class SourceLoaderPlugin {
   constructor(options) {
@@ -24,7 +28,18 @@ class SourceLoaderPlugin {
       );
 
       const asset = compilation.getAsset(relativeOutputPath);
-      compilation.emitAsset(options.filename, asset.source);
+
+      if (asset) {
+        compilation.emitAsset(options.filename, asset.source);
+      } else {
+        fs.readFile(outputPathAndFilename, (err, data) => {
+          if (!err) {
+            const zipFileSource = new RawSource(data);
+            console.log(zipFileSource);
+            compilation.emitAsset(options.filename, zipFileSource);
+          }
+        });
+      }
 
       callback();
     });
