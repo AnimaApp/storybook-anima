@@ -10264,13 +10264,6 @@ yocto-queue@^0.1.0:
   resolved "https://registry.yarnpkg.com/yocto-queue/-/yocto-queue-0.1.0.tgz#0294eb3dee05028d31ee1a5fa2c556a6aaf10a1b"
   integrity sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==
 
-zip-webpack-plugin@^4.0.1:
-  version "4.0.1"
-  resolved "https://registry.yarnpkg.com/zip-webpack-plugin/-/zip-webpack-plugin-4.0.1.tgz#95f09716ecf73e53d949443017cfb03afe597dd3"
-  integrity sha512-G041Q4qUaog44Ynit6gs4o+o3JIv0WWfOLvc8Q3IxvPfuqd2KBHhpJWAXUB9Cm1JcWHTIOp9vS3oGMWa1p1Ehw==
-  dependencies:
-    yazl "^2.5.1"
-
 zwitch@^1.0.0:
   version "1.0.5"
   resolved "https://registry.yarnpkg.com/zwitch/-/zwitch-1.0.5.tgz#d11d7381ffed16b742f6af7b3f223d5cd9fe9920"

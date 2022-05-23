@@ -18,6 +18,7 @@ import {
   getStorybook,
   getStorybookToken,
   injectCustomStyles,
+  notify,
   updateStorybookUploadStatus,
 } from "./utils";
 import { get } from "lodash";
@@ -28,8 +29,17 @@ import { uploadFile } from "./utils/upload";
 const getZip = (): Promise<{ hash: string; blob: Blob }> => {
   return new Promise((resolve, reject) => {
     fetch("storybook_preview.zip")
-      .then((res) => res.blob())
+      .then((res) => {
+        if (res.status === 200) {
+          return res.blob();
+        }
+        return null;
+      })
       .then((blob) => {
+        if (!blob) {
+          resolve({ blob: null, hash: null });
+          return;
+        }
         const formData = new FormData();
         formData.append("storybook_preview", blob, "storybook_preview.zip");
         formData.append("storybook_auth_token", getStorybookToken());
@@ -54,6 +64,8 @@ const getZip = (): Promise<{ hash: string; blob: Blob }> => {
 
 const getOrCreateStorybook = async () => {
   return getZip().then(async ({ hash, blob }) => {
+    if (!blob) return { error: true };
+
     const res = await getStorybook(hash);
     let data: Record<string, any> = {};
     let isNewHash = false;
@@ -189,19 +201,31 @@ addons.register(ADDON_ID, (api) => {
       // getAndUploadZipIfNeeded().then(console.log);
     });
     channel.on(EXPORT_SINGLE_STORY, async ({ storyId }) => {
-      const { blob, hash, isNewHash, storybookId, uploadUrl } =
+      const { blob, hash, isNewHash, storybookId, uploadUrl, error } =
         await getOrCreateStorybook();
+
+      if (error) {
+        notify("Something went wrong. Please try again later.");
+        return;
+      }
       if (isNewHash && hash) {
         uploadStorybook(storybookId, uploadUrl, blob);
       }
+      console.log(storyId);
       const ev = new CustomEvent(EXPORT_SINGLE_STORY, {
         detail: { storyId, storybookId },
       });
       workerFrame.contentDocument.dispatchEvent(ev);
     });
     channel.on(EXPORT_ALL_STORIES, async ({ stories }) => {
-      const { blob, hash, isNewHash, storybookId, uploadUrl } =
+      const { blob, hash, isNewHash, storybookId, uploadUrl, error } =
         await getOrCreateStorybook();
+
+      if (error) {
+        notify("Something went wrong. Please try again later.");
+        return;
+      }
+
       if (isNewHash && hash) {
         uploadStorybook(storybookId, uploadUrl, blob);
       }
@@ -210,6 +234,7 @@ addons.register(ADDON_ID, (api) => {
       });
       workerFrame.contentDocument.dispatchEvent(ev);
     });
+
     channel.on(GET_AUTH, () => {
       if (isAuthenticated) {
         channel.emit(SET_AUTH, true);

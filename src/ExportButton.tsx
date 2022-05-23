@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { IconButton } from "@storybook/components";
 import md5 from "object-hash";
 import { InputType } from "@storybook/csf";
@@ -297,6 +297,7 @@ export const ExportButton: React.FC<SProps> = () => {
   const [isExporting, setIsExporting] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
+  const argTypes = useRef({});
 
   useChannel({
     [SET_AUTH]: (isAuth) => {
@@ -320,7 +321,7 @@ export const ExportButton: React.FC<SProps> = () => {
   const api = useStorybookApi();
   const state = useStorybookState();
 
-  const argTypes = useArgTypes();
+  argTypes.current = useArgTypes();
   // const [args] = useArgs();
 
   // Export button click trigger (triggered only in the main thread)
@@ -350,9 +351,11 @@ export const ExportButton: React.FC<SProps> = () => {
           api.selectStory(storyId);
 
           const storyPayload = await getStoryPayload(api);
-          console.log(argTypes);
-          console.log(storyPayload);
-          await createStoryRequest(storybookId, { ...storyPayload, argTypes });
+
+          await createStoryRequest(storybookId, {
+            ...storyPayload,
+            argTypes: argTypes.current,
+          });
           parent.postMessage(
             { action: EXPORT_END, source: "anima", data: { error: null } },
             "*"
@@ -371,6 +374,7 @@ export const ExportButton: React.FC<SProps> = () => {
   const handleExportAllStories = async (event: CustomEvent) => {
     try {
       const stories = get(event, "detail.stories", []);
+      const storybookId = get(event, "detail.storybookId", "");
       sendExportSignal({
         isExporting: true,
         event: "storybook-addon.export-full-library.clicked",
@@ -379,8 +383,11 @@ export const ExportButton: React.FC<SProps> = () => {
         try {
           api.selectStory(story.id);
           const storyPayload = await getStoryPayload(api);
-          console.log(storyPayload);
-          // await createStoryRequest(storyPayload);
+
+          await createStoryRequest(storybookId, {
+            ...storyPayload,
+            argTypes: argTypes.current,
+          });
         } catch (error) {
           handleExportError(error);
           continue;
@@ -433,16 +440,6 @@ export const ExportButton: React.FC<SProps> = () => {
       >
         Anima
       </div>
-      <IconButton
-        onClick={() => {
-          if (isMainThread) {
-            api.getChannel().emit("UPLOAD_ZIP_IF_NEEDED");
-          }
-        }}
-        title="fetch zip"
-      >
-        {"=>"}
-      </IconButton>
       <Popover
         isOpen={isPopoverOpen}
         onClickOutside={() => setIsPopoverOpen(false)}
