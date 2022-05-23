@@ -35,7 +35,6 @@ class SourceLoaderPlugin {
         fs.readFile(outputPathAndFilename, (err, data) => {
           if (!err) {
             const zipFileSource = new RawSource(data);
-            console.log(zipFileSource);
             compilation.emitAsset(options.filename, zipFileSource);
           }
         });

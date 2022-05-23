@@ -67,7 +67,7 @@
   "scripts": {
     "dev": "start-storybook -p 6006",
     "sb:build": "build-storybook",
-    "build": "rm -rf dist && rollup -c && tsc",
+    "build": "rollup -c && tsc",
     "chromatic": "npx chromatic --project-token=37438085fe24"
   },
   "storybook": {

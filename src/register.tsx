@@ -106,42 +106,6 @@ const uploadStorybook = async (
   await updateStorybookUploadStatus(storybookId, status);
 };
 
-// const getAndUploadZipIfNeeded = () => {
-//   return getZip()
-//     .then(async ({ hash, blob }) => {
-//       const res = await getStorybook(hash);
-//       let data: Record<string, any> = {};
-//       let isHashChanged = false;
-
-//       if (res.status === 200) {
-//         data = await res.json();
-//       } else if (res.status === 403) {
-//         data = await createStorybook(hash);
-//         isHashChanged = true;
-//       }
-
-//       const { upload_signed_url, id } = data;
-
-//       if (isHashChanged && upload_signed_url) {
-//         console.log("___ UPLOADING ZIP ___");
-
-//         const uploadResponse = await uploadFile(upload_signed_url, blob);
-
-//         const status = uploadResponse.status === 200 ? "complete" : "failed";
-
-//         status === "complete"
-//           ? console.log("___ ZIP UPLOADED ___")
-//           : console.log("___ ZIP UPLOAD FAILED ___");
-//         await updateStorybookUploadStatus(id, status);
-//       }
-
-//       return data;
-//     })
-//     .catch((e) => {
-//       console.log(e);
-//     });
-// };
-
 addons.register(ADDON_ID, (api) => {
   const channel = api.getChannel();
   const isMainThread = window.location === window.parent.location;
@@ -197,9 +161,6 @@ addons.register(ADDON_ID, (api) => {
     workerFrame.src = window.location.href;
     document.body.appendChild(workerFrame);
 
-    channel.on("UPLOAD_ZIP_IF_NEEDED", async () => {
-      // getAndUploadZipIfNeeded().then(console.log);
-    });
     channel.on(EXPORT_SINGLE_STORY, async ({ storyId }) => {
       const { blob, hash, isNewHash, storybookId, uploadUrl, error } =
         await getOrCreateStorybook();
@@ -211,7 +172,6 @@ addons.register(ADDON_ID, (api) => {
       if (isNewHash && hash) {
         uploadStorybook(storybookId, uploadUrl, blob);
       }
-      console.log(storyId);
       const ev = new CustomEvent(EXPORT_SINGLE_STORY, {
         detail: { storyId, storybookId },
       });

@@ -190,7 +190,7 @@ const doExport = async (
 
 const getStoryPayload = async (api: API): Promise<{}> => {
   const story = api.getCurrentStoryData() as Story;
-  console.warn(story);
+  console.log(story);
 
   const storyName = story.name;
   const storyId = story.id;

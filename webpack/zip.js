@@ -53,8 +53,6 @@ ZipPlugin.prototype.apply = function (compiler) {
       )
         continue;
 
-      console.log(nameAndPath);
-
       const source = compilation.assets[nameAndPath].source();
 
       zipFile.addBuffer(
