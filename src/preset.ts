@@ -1,6 +1,6 @@
 const path = require("path");
 const core = require("@storybook/core-common");
-const ZipPlugin = require("zip-webpack-plugin");
+const ZipPlugin = require("../webpack/zip");
 const SourceLoaderPlugin = require("../webpack/sourceLoader");
 
 function managerEntries(entry = []) {
