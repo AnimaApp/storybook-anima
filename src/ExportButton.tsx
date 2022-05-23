@@ -55,6 +55,7 @@ import { choice, runSeed } from "./utils";
 interface SProps {}
 
 const SUPPORTED_ARG_TYPES = ["select", "radio", "boolean"];
+const COMPLEX_CONTROLS: string[] = ["array", "object", "date", "range", "file"];
 
 const getArgType = (arg: InputType): string => {
   let argType = "";
@@ -93,14 +94,19 @@ const populateSeedObjectBasedOnArgType = (
 
 const getVariants = (
   story: Story
-): [Record<string, any>[], Record<string, any>, string] => {
+): [Record<string, any>[], Record<string, any>, string, boolean] => {
   const argTypes = get(story, "argTypes", null);
   let seedObj = {};
+  let isUsingEditor = false;
   const storyArgs = get(story, "args", {}) as Args;
   const storyDefaultArgs = get(story, "initialArgs", {}) as Args;
 
   if (argTypes) {
     const argKeys = Object.keys(argTypes);
+
+    isUsingEditor = argKeys.some((argKey) =>
+      COMPLEX_CONTROLS.includes(getArgType(argTypes[argKey]))
+    );
 
     for (const argKey of argKeys) {
       const arg = argTypes[argKey];
@@ -145,7 +151,7 @@ const getVariants = (
   const variants = (
     !isEmpty(seedObj) ? runSeed(() => seedObj) : [defaultVariant]
   ) as Record<string, any>[];
-  return [variants, defaultVariant, hash];
+  return [variants, defaultVariant, hash, isUsingEditor];
 };
 
 const doExport = async (
@@ -199,7 +205,8 @@ const getStoryPayload = async (api: API): Promise<{}> => {
   api.on(SNIPPET_RENDERED, handleSnippetRender);
   api.on(UPDATE_QUERY_PARAMS, handleUpdateQueryParams);
 
-  const [variants, defaultVariant, defaultVariantHash] = getVariants(story);
+  const [variants, defaultVariant, defaultVariantHash, isUsingEditor] =
+    getVariants(story);
 
   parent.postMessage(
     {
@@ -288,6 +295,7 @@ const getStoryPayload = async (api: API): Promise<{}> => {
     name: storyName,
     storybookStoryId: storyId,
     isSample,
+    isUsingEditor,
   };
 
   return payload;

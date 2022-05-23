@@ -138,6 +138,7 @@ export const createStoryRequest = async (storybookId, args: any) => {
     variants,
     name,
     storybookStoryId,
+    isUsingEditor,
     argTypes,
     isSample,
   } = args;
@@ -150,7 +151,7 @@ export const createStoryRequest = async (storybookId, args: any) => {
     name,
     storybook_id: storybookStoryId,
     with_variants: true,
-    is_using_editor: false,
+    is_using_editor: isUsingEditor,
     is_sample: isSample,
     argTypes,
   });
