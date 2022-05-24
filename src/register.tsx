@@ -1,5 +1,7 @@
 import React from "react";
 import { addons, types } from "@storybook/addons";
+import promiseRetry from "promise-retry";
+
 import {
   ADDON_ID,
   ANIMA_ROOT_ID,
@@ -72,7 +74,7 @@ const getOrCreateStorybook = async () => {
 
     if (res.status === 200) {
       data = await res.json();
-    } else if (res.status === 403) {
+    } else if (res.status === 404) {
       data = await createStorybook(hash);
       isNewHash = true;
     }
@@ -96,14 +98,19 @@ const uploadStorybook = async (
 ) => {
   console.log("___ UPLOADING ZIP ___");
 
-  const uploadResponse = await uploadFile(uploadUrl, file);
+  const uploadResponse = await promiseRetry(
+    (doRetry) => {
+      return uploadFile(uploadUrl, file).catch(doRetry);
+    },
+    { retries: 3 }
+  );
 
   const status = uploadResponse.status === 200 ? "complete" : "failed";
 
   status === "complete"
     ? console.log("___ ZIP UPLOADED ___")
     : console.log("___ ZIP UPLOAD FAILED ___");
-  await updateStorybookUploadStatus(storybookId, status);
+  return updateStorybookUploadStatus(storybookId, status);
 };
 
 addons.register(ADDON_ID, (api) => {
