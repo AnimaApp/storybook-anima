@@ -10,7 +10,7 @@ import {
   useStorybookState,
   State,
   useArgTypes,
-  // useArgs,
+  useArgs,
 } from "@storybook/api";
 import { Args } from "@storybook/addons";
 import { SNIPPET_RENDERED } from "@storybook/docs-tools";
@@ -56,6 +56,8 @@ interface storyVariant {
   html_url: string;
   variant_id: string;
   description?: string;
+  args?: Record<string, any>;
+  is_default?: boolean;
 }
 
 const SUPPORTED_ARG_TYPES = ["select", "radio", "boolean"];
@@ -192,7 +194,10 @@ const doExport = async (
   return Promise.resolve(true);
 };
 
-const getStoryPayload = async (api: API): Promise<{}> => {
+const getStoryPayload = async (
+  api: API,
+  args: React.MutableRefObject<{}>
+): Promise<{}> => {
   const story = api.getCurrentStoryData() as Story;
   console.log(story);
 
@@ -230,6 +235,7 @@ const getStoryPayload = async (api: API): Promise<{}> => {
   const hashArray = orderedVariants.map((e) => e.hash);
 
   for (let i = 0; i < orderedVariants.length; i++) {
+    let is_default = false;
     const variantHash = get(orderedVariants[i], "hash", "");
     let variant = omit(orderedVariants[i], "hash");
 
@@ -278,6 +284,7 @@ const getStoryPayload = async (api: API): Promise<{}> => {
     const query = window.location.search;
 
     if (variantHash === defaultVariantHash) {
+      is_default = true;
       defaultArgsQuery = query;
     }
 
@@ -285,6 +292,8 @@ const getStoryPayload = async (api: API): Promise<{}> => {
       html_url: `iframe.html${query}`,
       description: snippetCodeAsBase64,
       variant_id: variantID,
+      args: args.current,
+      is_default,
     });
   }
 
@@ -310,6 +319,7 @@ export const ExportButton: React.FC<SProps> = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const argTypes = useRef({});
+  const args = useRef({});
 
   useChannel({
     [SET_AUTH]: (isAuth) => {
@@ -334,7 +344,8 @@ export const ExportButton: React.FC<SProps> = () => {
   const state = useStorybookState();
 
   argTypes.current = useArgTypes();
-  // const [args] = useArgs();
+  const [values] = useArgs();
+  args.current = values;
 
   // Export button click trigger (triggered only in the main thread)
   const handleExportClick = (action: string) => {
@@ -359,7 +370,7 @@ export const ExportButton: React.FC<SProps> = () => {
         try {
           api.selectStory(storyId);
 
-          const storyPayload = await getStoryPayload(api);
+          const storyPayload = await getStoryPayload(api, args);
 
           await createStoryRequest(storybookId, {
             ...storyPayload,
@@ -388,7 +399,7 @@ export const ExportButton: React.FC<SProps> = () => {
       for (const story of stories) {
         try {
           api.selectStory(story.id);
-          const storyPayload = await getStoryPayload(api);
+          const storyPayload = await getStoryPayload(api, args);
 
           await createStoryRequest(storybookId, {
             ...storyPayload,
