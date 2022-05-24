@@ -52,6 +52,11 @@ import {
 import { choice, runSeed } from "./utils";
 
 interface SProps {}
+interface storyVariant {
+  html_url: string;
+  variant_id: string;
+  description?: string;
+}
 
 const SUPPORTED_ARG_TYPES = ["select", "radio", "boolean"];
 const COMPLEX_CONTROLS: string[] = ["array", "object", "date", "range", "file"];
@@ -218,7 +223,7 @@ const getStoryPayload = async (api: API): Promise<{}> => {
 
   let defaultArgsQuery = "";
 
-  const storyVariants = [];
+  const storyVariants: storyVariant[] = [];
 
   const orderedVariants = uniqBy([defaultVariant, ...variants], (e) => e.hash);
 
@@ -277,7 +282,7 @@ const getStoryPayload = async (api: API): Promise<{}> => {
     }
 
     storyVariants.push({
-      html: `iframe.html${query}`,
+      html_url: `iframe.html${query}`,
       description: snippetCodeAsBase64,
       variant_id: variantID,
     });
