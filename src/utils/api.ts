@@ -109,26 +109,6 @@ export const getStorybookToken = () => {
   return STORYBOOK_ANIMA_TOKEN;
 };
 
-export const sendExportSignal = (args: {
-  isExporting?: boolean;
-  event?: string;
-}) => {
-  const storybookToken = getStorybookToken();
-  if (!storybookToken) return;
-  fetch(`${API_URL}/teams/update_export_status`, {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      ...("isExporting" in args
-        ? { is_storybook_exporting: args.isExporting }
-        : {}),
-      storybook_auth_token: storybookToken,
-      ...(args.event ? { event: args.event } : {}),
-    }),
-  });
-};
 
 export const createStoryRequest = async (storybookId, args: any) => {
   const {
