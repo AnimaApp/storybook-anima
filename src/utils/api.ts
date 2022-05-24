@@ -109,7 +109,6 @@ export const getStorybookToken = () => {
   return STORYBOOK_ANIMA_TOKEN;
 };
 
-
 export const createStoryRequest = async (storybookId, args: any) => {
   const {
     storybookToken,
@@ -133,7 +132,7 @@ export const createStoryRequest = async (storybookId, args: any) => {
     with_variants: true,
     is_using_editor: isUsingEditor,
     is_sample: isSample,
-    argTypes,
+    argTypesJSON: JSON.stringify(argTypes),
   });
 
   return fetch(`${STORYBOOK_SERVICE}/storybook/${storybookId}/stories`, {
