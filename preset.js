@@ -1,21 +1,14 @@
+const path = require("path");
 const core = require("@storybook/core-common");
+const ZipPlugin = require("./webpack/zip");
+const SourceLoaderPlugin = require("./webpack/sourceLoader");
+
 function managerEntries(entry = []) {
   return [...entry, require.resolve("./dist/register")];
 }
 
-function config(entry = [], { addDecorator = true }) {
-  const addonConfig = [];
-  if (addDecorator) {
-    addonConfig.push(require.resolve("./dist/addDecorators"));
-  }
-  return [...entry, ...addonConfig];
-}
-
-
-
 module.exports = {
   managerEntries,
-  config,
   webpackFinal: async (config, options) => {
     config.module.rules.push({
       test: !["vue", "angular"].includes(options.framework)
@@ -29,6 +22,14 @@ module.exports = {
       include: [core.getProjectRoot()],
       exclude: /node_modules/,
     });
+
+    const sourcePluginConfig = {
+      path: path.join(core.getProjectRoot(), ".anima"),
+      filename: "storybook_preview.zip",
+    };
+
+    config.plugins.push(new ZipPlugin({ ...sourcePluginConfig }));
+    config.plugins.push(new SourceLoaderPlugin(sourcePluginConfig));
 
     return config;
   },

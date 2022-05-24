@@ -41,7 +41,6 @@ const Banner: React.FC<IProps> = (props) => {
     setProgress(defaultExportStatus);
   };
   const handleProgressUpdate = (progress) => {
-    // console.log(data);
     setProgress(progress);
   };
   const handleToggle = ({ show = false } = {}) => {

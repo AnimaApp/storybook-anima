@@ -9,10 +9,12 @@ import {
   Story,
   useStorybookState,
   State,
+  useArgTypes,
+  useArgs,
 } from "@storybook/api";
 import { Args } from "@storybook/addons";
 import { SNIPPET_RENDERED } from "@storybook/docs-tools";
-import { STORY_RENDERED } from "@storybook/core-events";
+import { STORY_RENDERED, UPDATE_QUERY_PARAMS } from "@storybook/core-events";
 import { Popover } from "react-tiny-popover";
 import {
   get,
@@ -27,7 +29,7 @@ import {
 } from "lodash";
 
 import {
-  CreateStoryArgs,
+  // CreateStoryArgs,
   createStoryRequest,
   escapeHtml,
   getEventHandlerAsPromise,
@@ -35,10 +37,8 @@ import {
   isDocsStory,
   notify,
   sleep,
-  sendExportSignal,
 } from "./utils";
 import {
-  EVENT_CODE_RECEIVED,
   EXPORT_END,
   EXPORT_START,
   EXPORT_PROGRESS,
@@ -52,14 +52,16 @@ import {
 import { choice, runSeed } from "./utils";
 
 interface SProps {}
-interface StoryData {
-  html: string;
-  css: string;
-  width: number;
-  height: number;
+interface storyVariant {
+  html_url: string;
+  variant_id: string;
+  description?: string;
+  args?: Record<string, any>;
+  is_default?: boolean;
 }
 
 const SUPPORTED_ARG_TYPES = ["select", "radio", "boolean"];
+const COMPLEX_CONTROLS: string[] = ["array", "object", "date", "range", "file"];
 
 const getArgType = (arg: InputType): string => {
   let argType = "";
@@ -98,14 +100,19 @@ const populateSeedObjectBasedOnArgType = (
 
 const getVariants = (
   story: Story
-): [Record<string, any>[], Record<string, any>, string] => {
+): [Record<string, any>[], Record<string, any>, string, boolean] => {
   const argTypes = get(story, "argTypes", null);
   let seedObj = {};
+  let isUsingEditor = false;
   const storyArgs = get(story, "args", {}) as Args;
   const storyDefaultArgs = get(story, "initialArgs", {}) as Args;
 
   if (argTypes) {
     const argKeys = Object.keys(argTypes);
+
+    isUsingEditor = argKeys.some((argKey) =>
+      COMPLEX_CONTROLS.includes(getArgType(argTypes[argKey]))
+    );
 
     for (const argKey of argKeys) {
       const arg = argTypes[argKey];
@@ -150,7 +157,7 @@ const getVariants = (
   const variants = (
     !isEmpty(seedObj) ? runSeed(() => seedObj) : [defaultVariant]
   ) as Record<string, any>[];
-  return [variants, defaultVariant, hash];
+  return [variants, defaultVariant, hash, isUsingEditor];
 };
 
 const doExport = async (
@@ -189,8 +196,8 @@ const doExport = async (
 
 const getStoryPayload = async (
   api: API,
-  data: React.MutableRefObject<StoryData>
-): Promise<CreateStoryArgs> => {
+  args: React.MutableRefObject<{}>
+): Promise<{}> => {
   const story = api.getCurrentStoryData() as Story;
 
   const storyName = story.name;
@@ -199,11 +206,15 @@ const getStoryPayload = async (
   const [handleStoryRender, getStoryRenderPromise] = getEventHandlerAsPromise();
   const [handleSnippetRender, getSnippetRenderPromise] =
     getEventHandlerAsPromise();
+  const [handleUpdateQueryParams, getUpdateQueryParams] =
+    getEventHandlerAsPromise();
 
   api.on(STORY_RENDERED, handleStoryRender);
   api.on(SNIPPET_RENDERED, handleSnippetRender);
+  api.on(UPDATE_QUERY_PARAMS, handleUpdateQueryParams);
 
-  const [variants, defaultVariant, defaultVariantHash] = getVariants(story);
+  const [variants, defaultVariant, defaultVariantHash, isUsingEditor] =
+    getVariants(story);
 
   parent.postMessage(
     {
@@ -214,16 +225,16 @@ const getStoryPayload = async (
     "*"
   );
 
-  let HTML = "",
-    CSS = "",
-    defaultHTML = "",
-    defaultCSS = "";
+  let defaultArgsQuery = "";
+
+  const storyVariants: storyVariant[] = [];
 
   const orderedVariants = uniqBy([defaultVariant, ...variants], (e) => e.hash);
 
   const hashArray = orderedVariants.map((e) => e.hash);
 
   for (let i = 0; i < orderedVariants.length; i++) {
+    let is_default = false;
     const variantHash = get(orderedVariants[i], "hash", "");
     let variant = omit(orderedVariants[i], "hash");
 
@@ -237,9 +248,12 @@ const getStoryPayload = async (
       getStoryRenderPromise() as unknown as Promise<string>;
     const snippetRenderPromise =
       getSnippetRenderPromise() as unknown as Promise<[string, string]>;
+    const getUpdateQueryParamsPromise =
+      getUpdateQueryParams() as unknown as Promise<{ args: {} }>;
     api.updateStoryArgs(story, variant);
 
-    const [, snippetResult] = await Promise.all([
+    const [, , snippetResult] = await Promise.all([
+      getUpdateQueryParamsPromise,
       storyRenderPromise,
       Promise.race([snippetRenderPromise, sleep(2000, [undefined, ""])]),
     ]);
@@ -265,36 +279,35 @@ const getStoryPayload = async (
     );
 
     const variantID = escapeHtml(variantData.join(",") || "default");
-    const variantHTML = `<div data-fg-description="${snippetCodeAsBase64}" data-variant="${variantID}" data-variant-id="${variantHash}">${data.current.html}</div>`;
-    const variantCSS = data.current.css;
+
+    const query = window.location.search;
 
     if (variantHash === defaultVariantHash) {
-      defaultHTML = variantHTML;
-      defaultCSS = variantCSS;
+      is_default = true;
+      defaultArgsQuery = query;
     }
 
-    HTML += variantHTML;
-    CSS += variantCSS;
+    storyVariants.push({
+      html_url: `iframe.html${query}`,
+      description: snippetCodeAsBase64,
+      variant_id: variantID,
+      args: args.current,
+      is_default,
+    });
   }
 
   const fingerprint = md5({ variants: hashArray, name: storyName });
-
-  const { height, width } = data.current;
-
   const isSample = window.location.hostname === SAMPLE_STORYBOOK_HOST;
 
   const payload = {
     storybookToken: getStorybookToken(),
+    default_preview_url_args: defaultArgsQuery,
+    variants: storyVariants,
     fingerprint,
-    CSS,
-    HTML,
-    defaultCSS,
-    defaultHTML,
-    height,
     name: storyName,
-    width,
-    storybookId: storyId,
+    storybookStoryId: storyId,
     isSample,
+    isUsingEditor,
   };
 
   return payload;
@@ -304,13 +317,8 @@ export const ExportButton: React.FC<SProps> = () => {
   const [isExporting, setIsExporting] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
-
-  const storyData = useRef<StoryData>({
-    css: "",
-    html: "",
-    width: 0,
-    height: 0,
-  });
+  const argTypes = useRef({});
+  const args = useRef({});
 
   useChannel({
     [SET_AUTH]: (isAuth) => {
@@ -318,9 +326,6 @@ export const ExportButton: React.FC<SProps> = () => {
     },
     [IFRAME_RENDERER_CLICK]: () => {
       setIsPopoverOpen(false);
-    },
-    [EVENT_CODE_RECEIVED]: (data) => {
-      storyData.current = data;
     },
     [EXPORT_START]: () => {
       setIsExporting(true);
@@ -337,6 +342,10 @@ export const ExportButton: React.FC<SProps> = () => {
   const api = useStorybookApi();
   const state = useStorybookState();
 
+  argTypes.current = useArgTypes();
+  const [values] = useArgs();
+  args.current = values;
+
   // Export button click trigger (triggered only in the main thread)
   const handleExportClick = (action: string) => {
     doExport(api, state, action);
@@ -349,20 +358,23 @@ export const ExportButton: React.FC<SProps> = () => {
       { action: EXPORT_END, source: "anima", data: { error: true } },
       "*"
     );
-    sendExportSignal({
-      isExporting: false,
-    });
   };
 
   // Export single story handler
   const handleExportSingleStory = async (event: CustomEvent) => {
+    const { storyId, storybookId } = get(event, "detail", null);
+
     try {
-      const storyId = get(event, "detail.storyId", null);
       if (storyId) {
         try {
           api.selectStory(storyId);
-          const storyPayload = await getStoryPayload(api, storyData);
-          await createStoryRequest(storyPayload);
+
+          const storyPayload = await getStoryPayload(api, args);
+
+          await createStoryRequest(storybookId, {
+            ...storyPayload,
+            argTypes: argTypes.current,
+          });
           parent.postMessage(
             { action: EXPORT_END, source: "anima", data: { error: null } },
             "*"
@@ -381,15 +393,17 @@ export const ExportButton: React.FC<SProps> = () => {
   const handleExportAllStories = async (event: CustomEvent) => {
     try {
       const stories = get(event, "detail.stories", []);
-      sendExportSignal({
-        isExporting: true,
-        event: "storybook-addon.export-full-library.clicked",
-      });
+      const storybookId = get(event, "detail.storybookId", "");
+
       for (const story of stories) {
         try {
           api.selectStory(story.id);
-          const storyPayload = await getStoryPayload(api, storyData);
-          await createStoryRequest(storyPayload);
+          const storyPayload = await getStoryPayload(api, args);
+
+          await createStoryRequest(storybookId, {
+            ...storyPayload,
+            argTypes: argTypes.current,
+          });
         } catch (error) {
           handleExportError(error);
           continue;
@@ -399,10 +413,6 @@ export const ExportButton: React.FC<SProps> = () => {
         { action: EXPORT_END, source: "anima", data: { error: null } },
         "*"
       );
-      sendExportSignal({
-        isExporting: false,
-        event: "storybook-addon.export-full-library.success",
-      });
     } catch (error) {
       handleExportError(error);
     }

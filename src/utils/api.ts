@@ -1,7 +1,8 @@
 import { API_URL, STORYBOOK_ANIMA_TOKEN } from "../constants";
 import { capitalize, isBoolean, isString } from "./helpers";
 import { Args } from "@storybook/api";
-import { gzip } from "pako";
+
+const STORYBOOK_SERVICE = `${API_URL}/services/s2f`;
 
 export interface CreateStoryArgs {
   storybookToken: string;
@@ -17,17 +18,69 @@ export interface CreateStoryArgs {
   isSample: boolean;
 }
 
+export const getStorybook = async (storybookZipHash: string) => {
+  const storybookToken = getStorybookToken();
+
+  if (!storybookToken) throw new Error("Storybook token is required");
+
+  return fetch(`${STORYBOOK_SERVICE}/storybook?hash=${storybookZipHash}`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: "Bearer " + storybookToken,
+    },
+  });
+};
+export const createStorybook = async (storybookHash: string) => {
+  const storybookToken = getStorybookToken();
+
+  if (!storybookToken) throw new Error("Storybook token is required");
+
+  const res = await fetch(`${STORYBOOK_SERVICE}/storybook`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: "Bearer " + storybookToken,
+    },
+    body: JSON.stringify({ storybook_hash: storybookHash }),
+  });
+
+  if (res.status === 200) {
+    const data = await res.json();
+    return data;
+  }
+
+  return null;
+};
+
+export const updateStorybookUploadStatus = async (
+  storybookId: string,
+  status: string
+) => {
+  const storybookToken = getStorybookToken();
+
+  if (!storybookToken) throw new Error("Storybook token is required");
+
+  return fetch(`${STORYBOOK_SERVICE}/storybook/${storybookId}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: "Bearer " + storybookToken,
+    },
+    body: JSON.stringify({ upload_status: status }),
+  });
+};
+
 export const authenticate = async (storybookToken: string) => {
   const errorRes = { isAuthenticated: false, data: {} };
 
   if (!storybookToken) return errorRes;
   try {
-    const res = await fetch(`${API_URL}/storybook_token/validate`, {
-      method: "POST",
+    const res = await fetch(`${STORYBOOK_SERVICE}/validate_token`, {
+      method: "GET",
       headers: {
-        "Content-Type": "application/json",
+        Authorization: "Bearer " + storybookToken,
       },
-      body: JSON.stringify({ storybook_auth_token: storybookToken }),
     });
     if (res.status === 200) {
       const data = await res.json();
@@ -56,68 +109,40 @@ export const getStorybookToken = () => {
   return STORYBOOK_ANIMA_TOKEN;
 };
 
-export const sendExportSignal = (args: {
-  isExporting?: boolean;
-  event?: string;
-}) => {
-  const storybookToken = getStorybookToken();
-  if (!storybookToken) return;
-  fetch(`${API_URL}/teams/update_export_status`, {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      ...("isExporting" in args
-        ? { is_storybook_exporting: args.isExporting }
-        : {}),
-      storybook_auth_token: storybookToken,
-      ...(args.event ? { event: args.event } : {}),
-    }),
-  });
-};
-
-export const createStoryRequest = async (args: CreateStoryArgs) => {
+export const createStoryRequest = async (storybookId, args: any) => {
   const {
     storybookToken,
     fingerprint,
-    CSS,
-    HTML,
-    height,
+    default_preview_url_args,
+    variants,
     name,
-    width,
-    defaultCSS,
-    defaultHTML,
-    storybookId,
+    storybookStoryId,
+    isUsingEditor,
+    argTypes,
     isSample,
   } = args;
   if (!storybookToken) throw new Error("No storybook token");
 
-  const gzippedBody = gzip(
-    JSON.stringify({
-      html: HTML,
-      css: CSS,
-      fingerprint,
-      width,
-      height,
-      name,
-      storybookId,
-      storybook_auth_token: storybookToken,
-      default_css: defaultCSS,
-      default_html: defaultHTML,
-      with_variants: true,
-      is_sample: isSample,
-    })
-  );
+  const body = JSON.stringify({
+    fingerprint,
+    default_preview_url_args,
+    variants,
+    name,
+    storybook_id: storybookStoryId,
+    with_variants: true,
+    is_using_editor: isUsingEditor,
+    is_sample: isSample,
+    argTypesJSON: JSON.stringify(argTypes),
+  });
 
-  return fetch(`${API_URL}/stories`, {
+  return fetch(`${STORYBOOK_SERVICE}/storybook/${storybookId}/stories`, {
     method: "POST",
     headers: {
-      storybook_auth_token: storybookToken,
+      Authorization: "Bearer " + storybookToken,
       "Content-Type": "application/json",
-      "Content-Encoding": "gzip",
+      // "Content-Encoding": "gzip",
     },
-    body: gzippedBody,
+    body,
   });
 };
 
