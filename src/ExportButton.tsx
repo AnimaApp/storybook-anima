@@ -199,7 +199,6 @@ const getStoryPayload = async (
   args: React.MutableRefObject<{}>
 ): Promise<{}> => {
   const story = api.getCurrentStoryData() as Story;
-  console.log(story);
 
   const storyName = story.name;
   const storyId = story.id;

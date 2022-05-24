@@ -96,7 +96,7 @@ const uploadStorybook = async (
   uploadUrl: string,
   file: Blob
 ) => {
-  console.log("___ UPLOADING ZIP ___");
+  // console.log("___ UPLOADING ZIP ___");
 
   const uploadResponse = await promiseRetry(
     (doRetry) => {
@@ -107,9 +107,9 @@ const uploadStorybook = async (
 
   const status = uploadResponse.status === 200 ? "complete" : "failed";
 
-  status === "complete"
-    ? console.log("___ ZIP UPLOADED ___")
-    : console.log("___ ZIP UPLOAD FAILED ___");
+  // status === "complete"
+  //   ? console.log("___ ZIP UPLOADED ___")
+  //   : console.log("___ ZIP UPLOAD FAILED ___");
   return updateStorybookUploadStatus(storybookId, status);
 };
 
