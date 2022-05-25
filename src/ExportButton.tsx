@@ -37,7 +37,6 @@ import {
   getStorybookToken,
   isDocsStory,
   notify,
-  sleep,
 } from "./utils";
 import {
   EXPORT_END,
@@ -252,15 +251,24 @@ const getStoryPayload = async (
       getSnippetRenderPromise() as unknown as Promise<[string, string]>;
     const getUpdateQueryParamsPromise =
       getUpdateQueryParams() as unknown as Promise<{ args: {} }>;
+
+    const t0 = performance.now();
+
     api.updateStoryArgs(story, variant);
 
-    const [, , snippetResult] = await Promise.all([
-      getUpdateQueryParamsPromise,
-      storyRenderPromise,
-      Promise.race([snippetRenderPromise, sleep(150, [undefined, ""])]),
-    ]);
+    snippetRenderPromise
+      .then((d) => {
+        console.log(d);
+        const t1 = performance.now();
+        console.log("Getting snippet took " + (t1 - t0) + " milliseconds.");
+      })
+      .catch(console.log);
 
-    const [, snippetCode] = snippetResult;
+    await Promise.all([getUpdateQueryParamsPromise, storyRenderPromise]);
+
+    // monitor
+
+    const snippetCode = "";
     const snippetCodeAsBase64 = snippetCode ? window.btoa(snippetCode) : "";
 
     window.parent.postMessage(
