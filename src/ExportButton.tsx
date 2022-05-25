@@ -11,6 +11,7 @@ import {
   State,
   useArgTypes,
   useArgs,
+  ArgTypes,
 } from "@storybook/api";
 import { Args } from "@storybook/addons";
 import { SNIPPET_RENDERED } from "@storybook/docs-tools";
@@ -68,7 +69,7 @@ const getArgType = (arg: InputType): string => {
   const control = arg?.control as { type?: string };
   argType = control?.type;
   if (!argType) {
-    argType = isString(arg.type) ? arg.type : (arg.type?.name || 'unknown');
+    argType = isString(arg.type) ? arg.type : arg.type?.name || "unknown";
   }
   return argType;
 };
@@ -99,9 +100,9 @@ const populateSeedObjectBasedOnArgType = (
 };
 
 const getVariants = (
-  story: Story
+  story: Story,
+  argTypes: ArgTypes
 ): [Record<string, any>[], Record<string, any>, string, boolean] => {
-  const argTypes = get(story, "argTypes", null);
   let seedObj = {};
   let isUsingEditor = false;
   const storyArgs = get(story, "args", {}) as Args;
@@ -196,7 +197,8 @@ const doExport = async (
 
 const getStoryPayload = async (
   api: API,
-  args: React.MutableRefObject<{}>
+  args: React.MutableRefObject<{}>,
+  argTypes: ArgTypes
 ): Promise<{}> => {
   const story = api.getCurrentStoryData() as Story;
 
@@ -214,7 +216,7 @@ const getStoryPayload = async (
   api.on(UPDATE_QUERY_PARAMS, handleUpdateQueryParams);
 
   const [variants, defaultVariant, defaultVariantHash, isUsingEditor] =
-    getVariants(story);
+    getVariants(story, argTypes);
 
   parent.postMessage(
     {
@@ -255,7 +257,7 @@ const getStoryPayload = async (
     const [, , snippetResult] = await Promise.all([
       getUpdateQueryParamsPromise,
       storyRenderPromise,
-      Promise.race([snippetRenderPromise, sleep(2000, [undefined, ""])]),
+      Promise.race([snippetRenderPromise, sleep(50, [undefined, ""])]),
     ]);
 
     const [, snippetCode] = snippetResult;
@@ -369,7 +371,11 @@ export const ExportButton: React.FC<SProps> = () => {
         try {
           api.selectStory(storyId);
 
-          const storyPayload = await getStoryPayload(api, args);
+          const storyPayload = await getStoryPayload(
+            api,
+            args,
+            argTypes.current
+          );
 
           await createStoryRequest(storybookId, {
             ...storyPayload,
@@ -398,7 +404,11 @@ export const ExportButton: React.FC<SProps> = () => {
       for (const story of stories) {
         try {
           api.selectStory(story.id);
-          const storyPayload = await getStoryPayload(api, args);
+          const storyPayload = await getStoryPayload(
+            api,
+            args,
+            argTypes.current
+          );
 
           await createStoryRequest(storybookId, {
             ...storyPayload,
