@@ -257,7 +257,7 @@ const getStoryPayload = async (
     const [, , snippetResult] = await Promise.all([
       getUpdateQueryParamsPromise,
       storyRenderPromise,
-      Promise.race([snippetRenderPromise, sleep(50, [undefined, ""])]),
+      Promise.race([snippetRenderPromise, sleep(150, [undefined, ""])]),
     ]);
 
     const [, snippetCode] = snippetResult;
