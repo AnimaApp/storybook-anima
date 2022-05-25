@@ -14,7 +14,6 @@ import {
   ArgTypes,
 } from "@storybook/api";
 import { Args } from "@storybook/addons";
-import { SNIPPET_RENDERED } from "@storybook/docs-tools";
 import { STORY_RENDERED, UPDATE_QUERY_PARAMS } from "@storybook/core-events";
 import { Popover } from "react-tiny-popover";
 import {
@@ -205,13 +204,12 @@ const getStoryPayload = async (
   const storyId = story.id;
 
   const [handleStoryRender, getStoryRenderPromise] = getEventHandlerAsPromise();
-  const [handleSnippetRender, getSnippetRenderPromise] =
-    getEventHandlerAsPromise();
+
   const [handleUpdateQueryParams, getUpdateQueryParams] =
     getEventHandlerAsPromise();
 
   api.on(STORY_RENDERED, handleStoryRender);
-  api.on(SNIPPET_RENDERED, handleSnippetRender);
+
   api.on(UPDATE_QUERY_PARAMS, handleUpdateQueryParams);
 
   const [variants, defaultVariant, defaultVariantHash, isUsingEditor] =
@@ -247,26 +245,13 @@ const getStoryPayload = async (
 
     const storyRenderPromise =
       getStoryRenderPromise() as unknown as Promise<string>;
-    const snippetRenderPromise =
-      getSnippetRenderPromise() as unknown as Promise<[string, string]>;
+
     const getUpdateQueryParamsPromise =
       getUpdateQueryParams() as unknown as Promise<{ args: {} }>;
 
-    const t0 = performance.now();
-
     api.updateStoryArgs(story, variant);
 
-    snippetRenderPromise
-      .then((d) => {
-        console.log(d);
-        const t1 = performance.now();
-        console.log("Getting snippet took " + (t1 - t0) + " milliseconds.");
-      })
-      .catch(console.log);
-
     await Promise.all([getUpdateQueryParamsPromise, storyRenderPromise]);
-
-    // monitor
 
     const snippetCode = "";
     const snippetCodeAsBase64 = snippetCode ? window.btoa(snippetCode) : "";
