@@ -1,21 +1,27 @@
 import { API_URL, STORYBOOK_ANIMA_TOKEN } from "../constants";
 import { capitalize, isBoolean, isString } from "./helpers";
-import { Args } from "@storybook/api";
+import { Args, ArgTypes } from "@storybook/api";
 
 const STORYBOOK_SERVICE = `${API_URL}/services/s2f`;
 
-export interface CreateStoryArgs {
+export interface StoryVariant {
+  html_url: string;
+  variant_id: string;
+  description?: string;
+  args?: Record<string, any>;
+  is_default?: boolean;
+}
+
+export interface StoryPayload {
   storybookToken: string;
+  default_preview_url_args: string;
+  argTypes: ArgTypes;
+  variants: StoryVariant[];
   fingerprint: string;
-  HTML: string;
-  CSS: string;
-  width: number;
-  height: number;
-  defaultHTML: string;
-  defaultCSS: string;
   name: string;
-  storybookId: string;
+  storybookStoryId: string;
   isSample: boolean;
+  isUsingEditor: boolean;
 }
 
 export const getStorybook = async (storybookZipHash: string) => {
@@ -109,7 +115,10 @@ export const getStorybookToken = () => {
   return STORYBOOK_ANIMA_TOKEN;
 };
 
-export const createStoryRequest = async (storybookId, args: any) => {
+export const createStoryRequest = async (
+  storybookId: string,
+  payload: StoryPayload
+) => {
   const {
     storybookToken,
     fingerprint,
@@ -120,7 +129,7 @@ export const createStoryRequest = async (storybookId, args: any) => {
     isUsingEditor,
     argTypes,
     isSample,
-  } = args;
+  } = payload;
   if (!storybookToken) throw new Error("No storybook token");
 
   const body = JSON.stringify({

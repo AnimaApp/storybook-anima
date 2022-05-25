@@ -29,13 +29,14 @@ import {
 } from "lodash";
 
 import {
-  // CreateStoryArgs,
   createStoryRequest,
   escapeHtml,
   getEventHandlerAsPromise,
   getStorybookToken,
   isDocsStory,
   notify,
+  StoryPayload,
+  StoryVariant,
 } from "./utils";
 import {
   EXPORT_END,
@@ -47,17 +48,11 @@ import {
   GET_AUTH,
   SET_AUTH,
   SAMPLE_STORYBOOK_HOST,
+  VARIANTS_COUNT_LIMIT,
 } from "./constants";
 import { choice, runSeed } from "./utils";
 
 interface SProps {}
-interface storyVariant {
-  html_url: string;
-  variant_id: string;
-  description?: string;
-  args?: Record<string, any>;
-  is_default?: boolean;
-}
 
 const SUPPORTED_ARG_TYPES = ["select", "radio", "boolean"];
 const COMPLEX_CONTROLS: string[] = ["array", "object", "date", "range", "file"];
@@ -100,7 +95,7 @@ const populateSeedObjectBasedOnArgType = (
 const getVariants = (
   story: Story,
   argTypes: ArgTypes
-): [Record<string, any>[], Record<string, any>, string, boolean] => {
+): [Record<string, any>[], boolean] => {
   let seedObj = {};
   let isUsingEditor = false;
   const storyArgs = get(story, "args", {}) as Args;
@@ -156,7 +151,7 @@ const getVariants = (
   const variants = (
     !isEmpty(seedObj) ? runSeed(() => seedObj) : [defaultVariant]
   ) as Record<string, any>[];
-  return [variants, defaultVariant, hash, isUsingEditor];
+  return [[defaultVariant, ...variants], isUsingEditor];
 };
 
 const doExport = async (
@@ -197,7 +192,7 @@ const getStoryPayload = async (
   api: API,
   args: React.MutableRefObject<{}>,
   argTypes: ArgTypes
-): Promise<{}> => {
+): Promise<StoryPayload> => {
   const story = api.getCurrentStoryData() as Story;
 
   const storyName = story.name;
@@ -212,30 +207,31 @@ const getStoryPayload = async (
 
   api.on(UPDATE_QUERY_PARAMS, handleUpdateQueryParams);
 
-  const [variants, defaultVariant, defaultVariantHash, isUsingEditor] =
-    getVariants(story, argTypes);
-
-  parent.postMessage(
-    {
-      action: EXPORT_START,
-      source: "anima",
-      data: { total: variants.length, storyName },
-    },
-    "*"
-  );
+  const [variants, isUsingEditor] = getVariants(story, argTypes);
 
   let defaultArgsQuery = "";
+  const storyVariants: StoryVariant[] = [];
+  const uniqueVariants = uniqBy(variants, (e) => e.hash).slice(
+    0,
+    VARIANTS_COUNT_LIMIT
+  );
 
-  const storyVariants: storyVariant[] = [];
+  const hashArray = uniqueVariants.map((e) => e.hash);
 
-  const orderedVariants = uniqBy([defaultVariant, ...variants], (e) => e.hash);
+  if (uniqueVariants.length > 0) {
+    parent.postMessage(
+      {
+        action: EXPORT_START,
+        source: "anima",
+        data: { total: uniqueVariants.length, storyName },
+      },
+      "*"
+    );
+  }
 
-  const hashArray = orderedVariants.map((e) => e.hash);
-
-  for (let i = 0; i < orderedVariants.length; i++) {
+  for (let i = 0; i < uniqueVariants.length; i++) {
+    let variant = omit(uniqueVariants[i], "hash");
     let is_default = false;
-    const variantHash = get(orderedVariants[i], "hash", "");
-    let variant = omit(orderedVariants[i], "hash");
 
     variant = Object.keys(variant)
       .filter((key) => isBoolean(variant[key]) || isString(variant[key]))
@@ -261,7 +257,7 @@ const getStoryPayload = async (
         action: EXPORT_PROGRESS,
         data: {
           current: i + 1,
-          total: orderedVariants.length,
+          total: uniqueVariants.length,
           storyName,
         },
         source: "anima",
@@ -272,12 +268,10 @@ const getStoryPayload = async (
     const variantData = Object.keys(variant).map(
       (key) => `${key}=${variant[key]}`
     );
-
     const variantID = escapeHtml(variantData.join(",") || "default");
-
     const query = window.location.search;
 
-    if (variantHash === defaultVariantHash) {
+    if (i === 0) {
       is_default = true;
       defaultArgsQuery = query;
     }
@@ -296,6 +290,7 @@ const getStoryPayload = async (
 
   const payload = {
     storybookToken: getStorybookToken(),
+    argTypes,
     default_preview_url_args: defaultArgsQuery,
     variants: storyVariants,
     fingerprint,
@@ -357,10 +352,10 @@ export const ExportButton: React.FC<SProps> = () => {
 
   // Export single story handler
   const handleExportSingleStory = async (event: CustomEvent) => {
-    const { storyId, storybookId } = get(event, "detail", null);
+    const { storyId, storybookId } = get(event, "detail", {});
 
     try {
-      if (storyId) {
+      if (storyId && storybookId) {
         try {
           api.selectStory(storyId);
 
@@ -370,10 +365,11 @@ export const ExportButton: React.FC<SProps> = () => {
             argTypes.current
           );
 
-          await createStoryRequest(storybookId, {
-            ...storyPayload,
-            argTypes: argTypes.current,
-          });
+          if (storyPayload.variants.length === 0) {
+            return;
+          }
+
+          await createStoryRequest(storybookId, storyPayload);
           parent.postMessage(
             { action: EXPORT_END, source: "anima", data: { error: null } },
             "*"
@@ -391,8 +387,7 @@ export const ExportButton: React.FC<SProps> = () => {
   // Export full library handler
   const handleExportAllStories = async (event: CustomEvent) => {
     try {
-      const stories = get(event, "detail.stories", []);
-      const storybookId = get(event, "detail.storybookId", "");
+      const { stories = [], storybookId = "" } = get(event, "detail", {});
 
       for (const story of stories) {
         try {
@@ -403,10 +398,11 @@ export const ExportButton: React.FC<SProps> = () => {
             argTypes.current
           );
 
-          await createStoryRequest(storybookId, {
-            ...storyPayload,
-            argTypes: argTypes.current,
-          });
+          if (storyPayload.variants.length === 0) {
+            continue;
+          }
+
+          await createStoryRequest(storybookId, storyPayload);
         } catch (error) {
           handleExportError(error);
           continue;
