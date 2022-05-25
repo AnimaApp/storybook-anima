@@ -9,20 +9,13 @@ function managerEntries(entry = []) {
 
 module.exports = {
   managerEntries,
-  webpackFinal: async (config, options) => {
-    config.module.rules.push({
-      test: !["vue", "angular"].includes(options.framework)
-        ? /\.(mjs|tsx?|jsx?)$/
-        : /\.(mjs|jsx?)$/,
-      loader: require.resolve("babel-loader"),
-      options: {
-        plugins: [require.resolve("babel-storybook-anima")],
-        presets: ["@babel/preset-react"],
-      },
-      include: [core.getProjectRoot()],
-      exclude: /node_modules/,
-    });
-
+  babel: async (config) => {
+    return {
+      ...config,
+      plugins: [...config.plugins, require.resolve("babel-storybook-anima")],
+    };
+  },
+  webpackFinal: async (config) => {
     const sourcePluginConfig = {
       path: path.join(core.getProjectRoot(), ".anima"),
       filename: "storybook_preview.zip",
