@@ -68,7 +68,7 @@ const getArgType = (arg: InputType): string => {
   const control = arg?.control as { type?: string };
   argType = control?.type;
   if (!argType) {
-    argType = isString(arg.type) ? arg.type : arg.type.name;
+    argType = isString(arg.type) ? arg.type : (arg.type?.name || 'unknown');
   }
   return argType;
 };
