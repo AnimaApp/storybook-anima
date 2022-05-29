@@ -154,6 +154,36 @@ const getVariants = (
   return [[defaultVariant, ...variants], isUsingEditor];
 };
 
+const getTopNVariantsWithinLimit = (
+  story: Story,
+  argTypes: ArgTypes,
+  limit = VARIANTS_COUNT_LIMIT
+): [
+  variants: Record<string, any>[],
+  isUsingEditor: boolean,
+  hadTrimmedVariants: boolean
+] => {
+  const argTypeEntries = Object.entries(argTypes);
+
+  let currentArgs: ArgTypes = {};
+  let previousVariants: [Record<string, any>[], boolean];
+  let hadTrimmedVariants = false;
+
+  for (const [argName, argValue] of argTypeEntries) {
+    currentArgs[argName] = argValue;
+    const variants = getVariants(story, currentArgs);
+
+    if (variants[0].length > limit) {
+      hadTrimmedVariants = true;
+      break;
+    } else {
+      previousVariants = variants;
+    }
+  }
+
+  return [...previousVariants, hadTrimmedVariants];
+};
+
 const doExport = async (
   api: API,
   state: State,
@@ -207,7 +237,16 @@ const getStoryPayload = async (
 
   api.on(UPDATE_QUERY_PARAMS, handleUpdateQueryParams);
 
-  const [variants, isUsingEditor] = getVariants(story, argTypes);
+  const [variants, isUsingEditor, hadTrimmedVariants] =
+    getTopNVariantsWithinLimit(story, argTypes);
+
+  if (hadTrimmedVariants) {
+    console.warn(
+      `unable to export all props for story: ${storyName}, as the resulting number of variants would have been too high. ` +
+        `You can solve this problem by explicitly specifying which props should be exported in the story definition files. Please see: TODO`
+    );
+    // TODO: add the actual documentation link once we support such property
+  }
 
   let defaultArgsQuery = "";
   const storyVariants: StoryVariant[] = [];
@@ -223,7 +262,7 @@ const getStoryPayload = async (
       {
         action: EXPORT_START,
         source: "anima",
-        data: { total: uniqueVariants.length, storyName },
+        data: { total: uniqueVariants.length, storyName, hadTrimmedVariants },
       },
       "*"
     );
@@ -259,6 +298,7 @@ const getStoryPayload = async (
           current: i + 1,
           total: uniqueVariants.length,
           storyName,
+          hadTrimmedVariants,
         },
         source: "anima",
       },

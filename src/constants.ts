@@ -1,7 +1,7 @@
 export const API_URL =
   localStorage.getItem("api_url") || "https://api.animaapp.com";
 export const PARAM_KEY = "export-stories";
-export const VARIANTS_COUNT_LIMIT = 1000;
+export const VARIANTS_COUNT_LIMIT = 1025;
 export const EVENT_CODE_RECEIVED = "EVENT_CODE_RECEIVED";
 export const IFRAME_RENDERER_CLICK = "IFRAME_RENDERER_CLICK";
 export const ANIMA_ROOT_ID = "ANIMA_ROOT_ID";
