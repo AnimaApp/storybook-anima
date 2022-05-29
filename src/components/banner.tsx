@@ -120,8 +120,8 @@ const Banner: React.FC<IProps> = (props) => {
                     fontSize: "10px",
                   }}
                 >
-                  (some props have been excluded for performance reasons, please
-                  see the console for more information)
+                  (Some controls have been excluded for performance reasons,
+                  please see the console for more information)
                 </span>
               )}
               <span
