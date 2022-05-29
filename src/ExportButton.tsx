@@ -526,9 +526,7 @@ export const ExportButton: React.FC<SProps> = () => {
             }
             onClick={() => {
               if (isMainThread && !isAuthenticated) {
-                notify(
-                  authFailureMsg || "Missing team token. Please read the installation instructions."
-                );
+                notify(authFailureMsg);
                 return;
               }
               setIsPopoverOpen(!isPopoverOpen);

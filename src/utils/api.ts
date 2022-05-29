@@ -93,8 +93,9 @@ export const authenticate = async (storybookToken: string) => {
       return { isAuthenticated: true, data };
     }
     if (res.status > 299) {
-      const json = await res.json()
-      return { isAuthenticated: false, message: json?.message };
+      const json = await res.json();
+      const message = json?.message || "Missing team token. Please read the installation instructions.";
+      return { isAuthenticated: false, message };
     }
     return errorRes;
   } catch (error) {
