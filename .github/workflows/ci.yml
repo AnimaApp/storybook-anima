@@ -19,3 +19,24 @@ jobs:
         run: npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      # Deploy update to the benchmark repo
+
+      - name: "Install dependencies"
+        run: "sudo apt-get update && sudo apt-get install jq"
+      - name: "Setup SSH deploy key"
+        uses: webfactory/ssh-agent@fc49353b67b2b7c1e0e6a600572d01a69f2672dd
+        with:
+          ssh-private-key: ${{ secrets.BENCHMARK_REPO_DEPLOY_KEY }}
+      - name: "Push update addon version"
+        run: |
+          VERSION=$(cat package.json | jq -r ".version")
+
+          git config --global user.name "Anima CI"
+          git clone git@github.com:AnimaApp/storybook-collection.git
+          cd storybook-collection
+
+          ./scripts/upgrade_addon_version.sh "$VERSION"
+          git add -A
+          git commit -m "chore(misc): upgrade storybook addon version from CI"
+          git push
