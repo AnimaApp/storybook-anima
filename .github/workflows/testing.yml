@@ -9,7 +9,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
       - name: "Install dependencies"
-        run: "apt-get update && apt-get install jq"
+        run: "sudo apt-get update && sudo apt-get install jq"
       - name: "Setup SSH deploy key"
         uses: webfactory/ssh-agent@fc49353b67b2b7c1e0e6a600572d01a69f2672dd
         with:
