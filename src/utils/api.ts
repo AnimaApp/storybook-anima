@@ -92,6 +92,10 @@ export const authenticate = async (storybookToken: string) => {
       const data = await res.json();
       return { isAuthenticated: true, data };
     }
+    if (res.status > 299) {
+      const json = await res.json()
+      return { isAuthenticated: false, message: json?.message };
+    }
     return errorRes;
   } catch (error) {
     console.log(error);

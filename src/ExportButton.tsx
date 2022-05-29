@@ -346,13 +346,17 @@ const getStoryPayload = async (
 export const ExportButton: React.FC<SProps> = () => {
   const [isExporting, setIsExporting] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [authFailureMsg, setAuthFailureMsg] = useState();
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const argTypes = useRef({});
   const args = useRef({});
 
   useChannel({
-    [SET_AUTH]: (isAuth) => {
-      setIsAuthenticated(isAuth);
+    [SET_AUTH]: ({ isAuthenticated, message }) => {
+      setIsAuthenticated(isAuthenticated);
+      if (!isAuthenticated) {
+        setAuthFailureMsg(message);
+      }
     },
     [IFRAME_RENDERER_CLICK]: () => {
       setIsPopoverOpen(false);
@@ -523,7 +527,7 @@ export const ExportButton: React.FC<SProps> = () => {
             onClick={() => {
               if (isMainThread && !isAuthenticated) {
                 notify(
-                  "Missing team token. Please read the installation instructions."
+                  authFailureMsg || "Missing team token. Please read the installation instructions."
                 );
                 return;
               }
