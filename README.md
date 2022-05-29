@@ -71,7 +71,7 @@ As a result, some props might be missing in the exported
 components.
 
 In the near future, we are going to provide some options to
-customise which controls should be included or excluded during
+customize which controls should be included or excluded during
 the export process.
 
 ## Development
