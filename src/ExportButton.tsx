@@ -243,9 +243,9 @@ const getStoryPayload = async (
   if (hadTrimmedVariants) {
     console.warn(
       `Unable to export all controls for story: '${storyName}' as the resulting number of variants would have been too high. ` +
-        `You can solve this problem by explicitly specifying which props should be exported in the story definition files. Please see: TODO`
+        `You can solve this problem by explicitly specifying which props should be exported in the story definition files. ` +
+        `For more information, see: https://github.com/AnimaApp/storybook-anima#limits-on-the-number-of-variants`
     );
-    // TODO: add the actual documentation link once we support such property
   }
 
   let defaultArgsQuery = "";
