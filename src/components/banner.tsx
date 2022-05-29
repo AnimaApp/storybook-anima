@@ -15,7 +15,13 @@ interface IProps {
 const Banner: React.FC<IProps> = (props) => {
   const defaultExportStatus = { current: 1, total: 1, storyName: "Story" };
   const [isOpen, setIsOpen] = useState(false);
-  const [progress, setProgress] = useState(defaultExportStatus);
+  const [progress, setProgress] =
+    useState<{
+      current: number;
+      total: number;
+      storyName: string;
+      hadTrimmedVariants?: boolean;
+    }>(defaultExportStatus);
 
   const transitions = {
     entering: { opacity: 0 },
@@ -106,6 +112,18 @@ const Banner: React.FC<IProps> = (props) => {
               >
                 Exporting {progress.storyName}
               </span>
+              {progress.hadTrimmedVariants && (
+                <span
+                  style={{
+                    marginBottom: "5px",
+                    fontWeight: 600,
+                    fontSize: "10px",
+                  }}
+                >
+                  (Some controls have been excluded for performance reasons,
+                  please see the console for more information)
+                </span>
+              )}
               <span
                 style={{
                   marginBottom: "5px",
