@@ -204,7 +204,9 @@ addons.register(ADDON_ID, (api) => {
 
     channel.on(GET_AUTH, () => {
       if (isAuthenticated) {
-        channel.emit(SET_AUTH, true);
+        channel.emit(SET_AUTH, {
+          isAuthenticated: true,
+        });
         return;
       }
       if (isLoading) return;
@@ -212,8 +214,11 @@ addons.register(ADDON_ID, (api) => {
       isLoading = true;
 
       authenticate(getStorybookToken())
-        .then(({ isAuthenticated }) => {
-          channel.emit(SET_AUTH, isAuthenticated);
+        .then(({ isAuthenticated, message }) => {
+          channel.emit(SET_AUTH, {
+            isAuthenticated,
+            message: message,  
+          });
           isAuthenticated = isAuthenticated;
         })
         .finally(() => {
