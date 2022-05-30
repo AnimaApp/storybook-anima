@@ -262,7 +262,7 @@ const getStoryPayload = async (
   const storyTitle = (story as any)?.title || storyName;
   const storyId = story?.id;
   const [supportedInitialArgs, unsupportedInitialArgs] =
-    getSupportedInitialArgs(story.argTypes, story.initialArgs);
+    getSupportedInitialArgs(argTypes, story.initialArgs);
 
   const [variants, isUsingEditor, hadTrimmedVariants] =
     getTopNVariantsWithinLimit(story, argTypes);
