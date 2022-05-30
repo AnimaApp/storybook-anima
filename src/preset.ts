@@ -9,12 +9,12 @@ function managerEntries(entry = []) {
 
 module.exports = {
   managerEntries,
-  babel: async (config) => {
-    return {
-      ...config,
-      plugins: [...config.plugins, require.resolve("babel-storybook-anima")],
-    };
-  },
+  // babel: async (config) => {
+  //   return {
+  //     ...config,
+  //     plugins: [...config.plugins, require.resolve("babel-storybook-anima")],
+  //   };
+  // },
   webpackFinal: async (config) => {
     const sourcePluginConfig = {
       path: path.join(core.getProjectRoot(), ".anima"),
