@@ -356,18 +356,17 @@ const getStoryPayload = async (
 
 export const ExportButton: React.FC<SProps> = () => {
   const [isExporting, setIsExporting] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [authFailureMsg, setAuthFailureMsg] = useState();
+  const [authState, setAuthState] = useState({
+    isAuthenticated: false, 
+    message: ''
+  });
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const argTypes = useRef({});
   const args = useRef({});
 
   useChannel({
-    [SET_AUTH]: ({ isAuthenticated, message }) => {
-      setIsAuthenticated(isAuthenticated);
-      if (!isAuthenticated) {
-        setAuthFailureMsg(message);
-      }
+    [SET_AUTH]: ({ isAuthenticated, message='' }) => {
+      setAuthState({ isAuthenticated, message });
     },
     [IFRAME_RENDERER_CLICK]: () => {
       setIsPopoverOpen(false);
@@ -533,11 +532,11 @@ export const ExportButton: React.FC<SProps> = () => {
           <IconButton
             id="export-button"
             title={
-              isAuthenticated ? "Export to Anima" : "Authenticate to export"
+              authState.isAuthenticated ? "Export to Anima" : "Authenticate to export"
             }
             onClick={() => {
-              if (isMainThread && !isAuthenticated) {
-                notify(authFailureMsg);
+              if (isMainThread && !authState.isAuthenticated) {
+                notify(authState.message);
                 return;
               }
               setIsPopoverOpen(!isPopoverOpen);
@@ -570,7 +569,7 @@ export const ExportButton: React.FC<SProps> = () => {
             ) : (
               <svg
                 style={{
-                  ...(!isAuthenticated ? { filter: "grayscale(1)" } : {}),
+                  ...(!authState.isAuthenticated ? { filter: "grayscale(1)" } : {}),
                 }}
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
