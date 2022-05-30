@@ -19,6 +19,7 @@ export interface StoryPayload {
   variants: StoryVariant[];
   fingerprint: string;
   name: string;
+  title: string;
   storybookStoryId: string;
   isSample: boolean;
   isUsingEditor: boolean;
@@ -125,6 +126,7 @@ export const createStoryRequest = async (
     default_preview_url_args,
     variants,
     name,
+    title,
     storybookStoryId,
     isUsingEditor,
     argTypes,
@@ -137,6 +139,7 @@ export const createStoryRequest = async (
     default_preview_url_args,
     variants,
     name,
+    title,
     storybook_id: storybookStoryId,
     with_variants: true,
     is_using_editor: isUsingEditor,

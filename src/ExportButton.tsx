@@ -233,8 +233,10 @@ const getStoryPayload = async (
 ): Promise<StoryPayload> => {
   const story = api.getCurrentStoryData() as Story;
 
-  const storyName = story.name;
-  const storyId = story.id;
+  const storyName = story?.name;
+  // Story type complains that there is not title in the story but it's okay
+  const storyTitle = (story as any)?.title || storyName;
+  const storyId = story?.id;
 
   const [handleStoryRender, getStoryRenderPromise] = getEventHandlerAsPromise();
 
@@ -343,6 +345,7 @@ const getStoryPayload = async (
     variants: storyVariants,
     fingerprint,
     name: storyName,
+    title: storyTitle,
     storybookStoryId: storyId,
     isSample,
     isUsingEditor,
