@@ -76,14 +76,14 @@ const getOrCreateStorybook = async () => {
       data = await res.json();
     } else if (res.status === 404) {
       data = await createStorybook(hash);
-      isNewHash = true;
     }
 
-    const { id, upload_signed_url } = data;
+    const { id, upload_signed_url, upload_status="init" } = data;
 
     return {
       storybookId: id,
       uploadUrl: upload_signed_url,
+      uploadStatus: upload_status,
       isNewHash,
       hash,
       blob,
@@ -169,14 +169,14 @@ addons.register(ADDON_ID, (api) => {
     document.body.appendChild(workerFrame);
 
     channel.on(EXPORT_SINGLE_STORY, async ({ storyId }) => {
-      const { blob, hash, isNewHash, storybookId, uploadUrl, error } =
+      const { blob, hash, uploadStatus, storybookId, uploadUrl, error } =
         await getOrCreateStorybook();
 
       if (error) {
         notify("Something went wrong. Please try again later.");
         return;
       }
-      if (isNewHash && hash) {
+      if (uploadStatus !== "complete" && hash) {
         uploadStorybook(storybookId, uploadUrl, blob);
       }
       const ev = new CustomEvent(EXPORT_SINGLE_STORY, {
@@ -185,7 +185,7 @@ addons.register(ADDON_ID, (api) => {
       workerFrame.contentDocument.dispatchEvent(ev);
     });
     channel.on(EXPORT_ALL_STORIES, async ({ stories }) => {
-      const { blob, hash, isNewHash, storybookId, uploadUrl, error } =
+      const { blob, hash, uploadStatus, storybookId, uploadUrl, error } =
         await getOrCreateStorybook();
 
       if (error) {
@@ -193,7 +193,7 @@ addons.register(ADDON_ID, (api) => {
         return;
       }
 
-      if (isNewHash && hash) {
+      if (uploadStatus !== "complete" && hash) {
         uploadStorybook(storybookId, uploadUrl, blob);
       }
       const ev = new CustomEvent(EXPORT_ALL_STORIES, {

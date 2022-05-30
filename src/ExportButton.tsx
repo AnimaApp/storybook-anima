@@ -164,6 +164,9 @@ const getTopNVariantsWithinLimit = (
   hadTrimmedVariants: boolean
 ] => {
   const argTypeEntries = Object.entries(argTypes);
+  if (argTypeEntries.length === 0) {
+    return [...getVariants(story, argTypes), false];
+  }
 
   let currentArgs: ArgTypes = {};
   let previousVariants: [Record<string, any>[], boolean];
@@ -181,7 +184,12 @@ const getTopNVariantsWithinLimit = (
     }
   }
 
-  return [...previousVariants, hadTrimmedVariants];
+  if (hadTrimmedVariants) {
+    // If we had to trim variants, then we want the component to be classified as complex
+    return [previousVariants[0], true, hadTrimmedVariants];
+  } else {
+    return [...previousVariants, hadTrimmedVariants];
+  }
 };
 
 const doExport = async (
@@ -225,8 +233,10 @@ const getStoryPayload = async (
 ): Promise<StoryPayload> => {
   const story = api.getCurrentStoryData() as Story;
 
-  const storyName = story.name;
-  const storyId = story.id;
+  const storyName = story?.name;
+  // Story type complains that there is not title in the story but it's okay
+  const storyTitle = (story as any)?.title || storyName;
+  const storyId = story?.id;
 
   const [handleStoryRender, getStoryRenderPromise] = getEventHandlerAsPromise();
 
@@ -335,6 +345,7 @@ const getStoryPayload = async (
     variants: storyVariants,
     fingerprint,
     name: storyName,
+    title: storyTitle,
     storybookStoryId: storyId,
     isSample,
     isUsingEditor,
