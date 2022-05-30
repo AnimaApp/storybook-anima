@@ -176,7 +176,7 @@ addons.register(ADDON_ID, (api) => {
         notify("Something went wrong. Please try again later.");
         return;
       }
-      if (uploadStatus == "init" && hash) {
+      if (uploadStatus !== "ready" && hash) {
         uploadStorybook(storybookId, uploadUrl, blob);
       }
       const ev = new CustomEvent(EXPORT_SINGLE_STORY, {
@@ -193,7 +193,7 @@ addons.register(ADDON_ID, (api) => {
         return;
       }
 
-      if (uploadStatus == "init" && hash) {
+      if (uploadStatus !== "ready" && hash) {
         uploadStorybook(storybookId, uploadUrl, blob);
       }
       const ev = new CustomEvent(EXPORT_ALL_STORIES, {
