@@ -164,6 +164,9 @@ const getTopNVariantsWithinLimit = (
   hadTrimmedVariants: boolean
 ] => {
   const argTypeEntries = Object.entries(argTypes);
+  if (argTypeEntries.length === 0) {
+    return [...getVariants(story, argTypes), false];
+  }
 
   let currentArgs: ArgTypes = {};
   let previousVariants: [Record<string, any>[], boolean];
@@ -181,7 +184,12 @@ const getTopNVariantsWithinLimit = (
     }
   }
 
-  return [...previousVariants, hadTrimmedVariants];
+  if (hadTrimmedVariants) {
+    // If we had to trim variants, then we want the component to be classified as complex
+    return [previousVariants[0], true, hadTrimmedVariants];
+  } else {
+    return [...previousVariants, hadTrimmedVariants];
+  }
 };
 
 const doExport = async (

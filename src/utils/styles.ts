@@ -8,7 +8,7 @@ const GLOBAL_STYLES = `
   z-index: 998;
   bottom: 20px;
   right: 20px;
-  height: 65px;
+  min-height: 65px;
   min-Width: 200px;
   box-shadow: inset 0px 0px 0px 2px #505050;
   border-radius: 5px;
