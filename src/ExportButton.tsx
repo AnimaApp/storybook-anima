@@ -260,7 +260,7 @@ const getStoryPayload = async (
   const storyName = story?.name;
   // Story type complains that there is not title in the story but it's okay
   const storyTitle = (story as any)?.title || storyName;
-  const storyId = story.id;
+  const storyId = story?.id;
   const [supportedInitialArgs, unsupportedInitialArgs] =
     getSupportedInitialArgs(story.argTypes, story.initialArgs);
 
