@@ -112,18 +112,6 @@ const Banner: React.FC<IProps> = (props) => {
               >
                 Exporting {progress.storyName}
               </span>
-              {progress.hadTrimmedVariants && (
-                <span
-                  style={{
-                    marginBottom: "5px",
-                    fontWeight: 600,
-                    fontSize: "10px",
-                  }}
-                >
-                  (Some controls have been excluded for performance reasons,
-                  please see the console for more information)
-                </span>
-              )}
               <span
                 style={{
                   marginBottom: "5px",
@@ -133,6 +121,20 @@ const Banner: React.FC<IProps> = (props) => {
               >
                 {progress.current} / {progress.total} variants exported
               </span>
+
+              {progress.hadTrimmedVariants && (
+                <span
+                  style={{
+                    marginBottom: "5px",
+                    fontWeight: 600,
+                    fontSize: "10px",
+                  }}
+                >
+                  *Some controls were skipped to reduce variants in Figma*
+                  <br />
+                  View the addon guidelines for more details
+                </span>
+              )}
             </div>
           </div>
         </div>
