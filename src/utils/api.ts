@@ -9,6 +9,7 @@ export interface StoryVariant {
   variant_id: string;
   description?: string;
   args?: Record<string, any>;
+  initial_args?: Record<string, any>;
   is_default?: boolean;
 }
 

@@ -195,26 +195,24 @@ const getTopNVariantsWithinLimit = (
 // the query building process can ignore them.
 const getSupportedInitialArgs = (argTypes: ArgTypes, initialArgs: any) => {
   if (!initialArgs || !argTypes) {
-    return [{}, {}];
+    return {};
   }
 
   const supportedArgs = {};
-  const unsupportedArgs = {};
 
   for (const [argName, arg] of Object.entries(argTypes)) {
     const argType = getArgType(arg);
     const initialArgValue = initialArgs[argName];
 
-    if (initialArgValue !== undefined) {
-      if (SUPPORTED_ARG_TYPES.includes(argType)) {
-        supportedArgs[argName] = initialArgValue;
-      } else {
-        unsupportedArgs[argName] = initialArgValue;
-      }
+    if (
+      SUPPORTED_ARG_TYPES.includes(argType) &&
+      initialArgValue !== undefined
+    ) {
+      supportedArgs[argName] = initialArgValue;
     }
   }
 
-  return [supportedArgs, unsupportedArgs];
+  return supportedArgs;
 };
 
 const doExport = async (
@@ -261,8 +259,10 @@ const getStoryPayload = async (
   // Story type complains that there is not title in the story but it's okay
   const storyTitle = (story as any)?.title || storyName;
   const storyId = story?.id;
-  const [supportedInitialArgs, unsupportedInitialArgs] =
-    getSupportedInitialArgs(argTypes, story.initialArgs);
+  const supportedInitialArgs = getSupportedInitialArgs(
+    argTypes,
+    story.initialArgs
+  );
 
   const [variants, isUsingEditor, hadTrimmedVariants] =
     getTopNVariantsWithinLimit(story, argTypes);
@@ -343,10 +343,8 @@ const getStoryPayload = async (
       html_url: `iframe.html${query}`,
       description: snippetCodeAsBase64,
       variant_id: variantID,
-      args: {
-        ...unsupportedInitialArgs,
-        ...variant,
-      },
+      args: variant,
+      initial_args: story.initialArgs,
       is_default,
     });
   }
