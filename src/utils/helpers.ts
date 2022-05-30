@@ -83,3 +83,6 @@ export const getEventHandlerAsPromise = () => {
 
 export const sleep = <T>(ms: number, returnValue: T): Promise<T> =>
   new Promise((resolve) => setTimeout(resolve, ms, returnValue));
+
+// Useful to await for the next JS event tick, that way the UI can update in the meantime
+export const nextTick = () => new Promise((resolve) => setTimeout(resolve, 0));
