@@ -257,7 +257,7 @@ const getStoryPayload = async (
 ): Promise<StoryPayload> => {
   const story = api.getCurrentStoryData() as Story;
 
-  const storyName = story.name;
+  const storyName = story?.name;
   // Story type complains that there is not title in the story but it's okay
   const storyTitle = (story as any)?.title || storyName;
   const storyId = story.id;
