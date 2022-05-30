@@ -10,11 +10,9 @@ import {
   useStorybookState,
   State,
   useArgTypes,
-  useArgs,
   ArgTypes,
 } from "@storybook/api";
 import { Args } from "@storybook/addons";
-import { STORY_RENDERED, UPDATE_QUERY_PARAMS } from "@storybook/core-events";
 import { Popover } from "react-tiny-popover";
 import {
   get,
@@ -31,9 +29,9 @@ import {
 import {
   createStoryRequest,
   escapeHtml,
-  getEventHandlerAsPromise,
   getStorybookToken,
   isDocsStory,
+  nextTick,
   notify,
   StoryPayload,
   StoryVariant,
@@ -51,6 +49,7 @@ import {
   VARIANTS_COUNT_LIMIT,
 } from "./constants";
 import { choice, runSeed } from "./utils";
+import { buildArgsParam } from "./utils/argsQuery";
 
 interface SProps {}
 
@@ -192,6 +191,30 @@ const getTopNVariantsWithinLimit = (
   }
 };
 
+// Extract the properties we support from the initial args so that
+// the query building process can ignore them.
+const getSupportedInitialArgs = (argTypes: ArgTypes, initialArgs: any) => {
+  if (!initialArgs || !argTypes) {
+    return {};
+  }
+
+  const supportedArgs = {};
+
+  for (const [argName, arg] of Object.entries(argTypes)) {
+    const argType = getArgType(arg);
+    const initialArgValue = initialArgs[argName];
+
+    if (
+      SUPPORTED_ARG_TYPES.includes(argType) &&
+      initialArgValue !== undefined
+    ) {
+      supportedArgs[argName] = initialArgValue;
+    }
+  }
+
+  return supportedArgs;
+};
+
 const doExport = async (
   api: API,
   state: State,
@@ -228,7 +251,6 @@ const doExport = async (
 
 const getStoryPayload = async (
   api: API,
-  args: React.MutableRefObject<{}>,
   argTypes: ArgTypes
 ): Promise<StoryPayload> => {
   const story = api.getCurrentStoryData() as Story;
@@ -237,15 +259,10 @@ const getStoryPayload = async (
   // Story type complains that there is not title in the story but it's okay
   const storyTitle = (story as any)?.title || storyName;
   const storyId = story?.id;
-
-  const [handleStoryRender, getStoryRenderPromise] = getEventHandlerAsPromise();
-
-  const [handleUpdateQueryParams, getUpdateQueryParams] =
-    getEventHandlerAsPromise();
-
-  api.on(STORY_RENDERED, handleStoryRender);
-
-  api.on(UPDATE_QUERY_PARAMS, handleUpdateQueryParams);
+  const supportedInitialArgs = getSupportedInitialArgs(
+    argTypes,
+    story.initialArgs
+  );
 
   const [variants, isUsingEditor, hadTrimmedVariants] =
     getTopNVariantsWithinLimit(story, argTypes);
@@ -288,38 +305,34 @@ const getStoryPayload = async (
         return Object.assign(cur, { [key]: variant[key] });
       }, {});
 
-    const storyRenderPromise =
-      getStoryRenderPromise() as unknown as Promise<string>;
-
-    const getUpdateQueryParamsPromise =
-      getUpdateQueryParams() as unknown as Promise<{ args: {} }>;
-
-    api.updateStoryArgs(story, variant);
-
-    await Promise.all([getUpdateQueryParamsPromise, storyRenderPromise]);
-
     const snippetCode = "";
     const snippetCodeAsBase64 = snippetCode ? window.btoa(snippetCode) : "";
 
-    window.parent.postMessage(
-      {
-        action: EXPORT_PROGRESS,
-        data: {
-          current: i + 1,
-          total: uniqueVariants.length,
-          storyName,
-          hadTrimmedVariants,
+    // Every once in a while notify the progress
+    if (i % 50 === 0 || i === uniqueVariants.length - 1) {
+      window.parent.postMessage(
+        {
+          action: EXPORT_PROGRESS,
+          data: {
+            current: i + 1,
+            total: uniqueVariants.length,
+            storyName,
+            hadTrimmedVariants,
+          },
+          source: "anima",
         },
-        source: "anima",
-      },
-      "*"
-    );
+        "*"
+      );
+      // Wait for the UI to update
+      await nextTick();
+    }
 
     const variantData = Object.keys(variant).map(
       (key) => `${key}=${variant[key]}`
     );
     const variantID = escapeHtml(variantData.join(",") || "default");
-    const query = window.location.search;
+    const serializedArgs = buildArgsParam(supportedInitialArgs, variant);
+    const query = `?path=/story/${story.id}&args=${serializedArgs}`;
 
     if (i === 0) {
       is_default = true;
@@ -330,7 +343,8 @@ const getStoryPayload = async (
       html_url: `iframe.html${query}`,
       description: snippetCodeAsBase64,
       variant_id: variantID,
-      args: args.current,
+      args: variant,
+      initial_args: story.initialArgs,
       is_default,
     });
   }
@@ -362,7 +376,6 @@ export const ExportButton: React.FC<SProps> = () => {
   });
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const argTypes = useRef({});
-  const args = useRef({});
 
   useChannel({
     [SET_AUTH]: ({ isAuthenticated, message='' }) => {
@@ -387,8 +400,6 @@ export const ExportButton: React.FC<SProps> = () => {
   const state = useStorybookState();
 
   argTypes.current = useArgTypes();
-  const [values] = useArgs();
-  args.current = values;
 
   // Export button click trigger (triggered only in the main thread)
   const handleExportClick = (action: string) => {
@@ -413,11 +424,7 @@ export const ExportButton: React.FC<SProps> = () => {
         try {
           api.selectStory(storyId);
 
-          const storyPayload = await getStoryPayload(
-            api,
-            args,
-            argTypes.current
-          );
+          const storyPayload = await getStoryPayload(api, argTypes.current);
 
           if (storyPayload.variants.length === 0) {
             return;
@@ -446,11 +453,7 @@ export const ExportButton: React.FC<SProps> = () => {
       for (const story of stories) {
         try {
           api.selectStory(story.id);
-          const storyPayload = await getStoryPayload(
-            api,
-            args,
-            argTypes.current
-          );
+          const storyPayload = await getStoryPayload(api, argTypes.current);
 
           if (storyPayload.variants.length === 0) {
             continue;
