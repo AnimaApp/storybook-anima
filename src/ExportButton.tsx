@@ -344,7 +344,6 @@ const getStoryPayload = async (
       description: snippetCodeAsBase64,
       variant_id: variantID,
       args: variant,
-      initial_args: story.initialArgs,
       is_default,
     });
   }
@@ -371,14 +370,14 @@ const getStoryPayload = async (
 export const ExportButton: React.FC<SProps> = () => {
   const [isExporting, setIsExporting] = useState(false);
   const [authState, setAuthState] = useState({
-    isAuthenticated: false, 
-    message: ''
+    isAuthenticated: false,
+    message: "",
   });
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const argTypes = useRef({});
 
   useChannel({
-    [SET_AUTH]: ({ isAuthenticated, message='' }) => {
+    [SET_AUTH]: ({ isAuthenticated, message = "" }) => {
       setAuthState({ isAuthenticated, message });
     },
     [IFRAME_RENDERER_CLICK]: () => {
@@ -535,7 +534,9 @@ export const ExportButton: React.FC<SProps> = () => {
           <IconButton
             id="export-button"
             title={
-              authState.isAuthenticated ? "Export to Anima" : "Authenticate to export"
+              authState.isAuthenticated
+                ? "Export to Anima"
+                : "Authenticate to export"
             }
             onClick={() => {
               if (isMainThread && !authState.isAuthenticated) {
@@ -572,7 +573,9 @@ export const ExportButton: React.FC<SProps> = () => {
             ) : (
               <svg
                 style={{
-                  ...(!authState.isAuthenticated ? { filter: "grayscale(1)" } : {}),
+                  ...(!authState.isAuthenticated
+                    ? { filter: "grayscale(1)" }
+                    : {}),
                 }}
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
