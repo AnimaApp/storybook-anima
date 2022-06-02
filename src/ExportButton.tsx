@@ -518,14 +518,14 @@ export const ExportButton: React.FC<SProps> = () => {
                 className="sb_popover_list_item"
                 onClick={() => handleExportClick(EXPORT_SINGLE_STORY)}
               >
-                Export only this component
+                Export this component
               </li>
-              <li
+              {/* <li
                 onClick={() => handleExportClick(EXPORT_ALL_STORIES)}
                 className="sb_popover_list_item"
               >
                 Export full library
-              </li>
+              </li> */}
             </ul>
           </div>
         }
