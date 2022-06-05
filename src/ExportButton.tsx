@@ -331,7 +331,11 @@ const getStoryPayload = async (
       (key) => `${key}=${variant[key]}`
     );
     const variantID = escapeHtml(variantData.join(",") || "default");
-    const serializedArgs = buildArgsParam(supportedInitialArgs, variant);
+    const completeArgs = {
+      ...supportedInitialArgs,
+      ...variant,
+    };
+    const serializedArgs = buildArgsParam(supportedInitialArgs, completeArgs);
     const query = `?path=/story/${story.id}&args=${serializedArgs}`;
 
     if (i === 0) {
