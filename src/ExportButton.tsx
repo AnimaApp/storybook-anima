@@ -347,7 +347,7 @@ const getStoryPayload = async (
       html_url: `iframe.html${query}`,
       description: snippetCodeAsBase64,
       variant_id: variantID,
-      args: variant,
+      args: is_default ? { ...story.initialArgs, ...variant } : variant,
       is_default,
     });
   }
