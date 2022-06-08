@@ -305,9 +305,6 @@ const getStoryPayload = async (
         return Object.assign(cur, { [key]: variant[key] });
       }, {});
 
-    const snippetCode = "";
-    const snippetCodeAsBase64 = snippetCode ? window.btoa(snippetCode) : "";
-
     // Every once in a while notify the progress
     if (i % 50 === 0 || i === uniqueVariants.length - 1) {
       window.parent.postMessage(
@@ -345,7 +342,6 @@ const getStoryPayload = async (
 
     storyVariants.push({
       html_url: `iframe.html${query}`,
-      description: snippetCodeAsBase64,
       variant_id: variantID,
       args: is_default ? { ...story.initialArgs, ...variant } : variant,
       is_default,
