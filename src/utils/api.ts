@@ -24,7 +24,7 @@ export interface StoryPayload {
   storybookStoryId: string;
   isSample: boolean;
   isUsingEditor: boolean;
-  source: string;
+  source: string | undefined;
 }
 
 export const getStorybook = async (storybookZipHash: string) => {
