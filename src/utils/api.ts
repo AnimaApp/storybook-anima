@@ -24,6 +24,7 @@ export interface StoryPayload {
   storybookStoryId: string;
   isSample: boolean;
   isUsingEditor: boolean;
+  source: string;
 }
 
 export const getStorybook = async (storybookZipHash: string) => {
@@ -137,6 +138,7 @@ export const createStoryRequest = async (
     isUsingEditor,
     argTypes,
     isSample,
+    source,
   } = payload;
   if (!storybookToken) throw new Error("No storybook token");
 
@@ -151,6 +153,7 @@ export const createStoryRequest = async (
     is_using_editor: isUsingEditor,
     is_sample: isSample,
     argTypesJSON: JSON.stringify(argTypes),
+    source,
   });
 
   return fetch(`${STORYBOOK_SERVICE}/storybook/${storybookId}/stories`, {
@@ -158,7 +161,6 @@ export const createStoryRequest = async (
     headers: {
       Authorization: "Bearer " + storybookToken,
       "Content-Type": "application/json",
-      // "Content-Encoding": "gzip",
     },
     body,
   });
