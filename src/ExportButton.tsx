@@ -351,9 +351,10 @@ const getStoryPayload = async (
   const fingerprint = md5({ variants: hashArray, name: storyName });
   const isSample = window.location.hostname === SAMPLE_STORYBOOK_HOST;
 
-  const payload = {
+  return {
     storybookToken: getStorybookToken(),
     argTypes,
+    source: story.parameters?.storySource?.source,
     default_preview_url_args: defaultArgsQuery,
     variants: storyVariants,
     fingerprint,
@@ -363,8 +364,6 @@ const getStoryPayload = async (
     isSample,
     isUsingEditor,
   };
-
-  return payload;
 };
 
 export const ExportButton: React.FC<SProps> = () => {
