@@ -32,7 +32,7 @@ This addon should work with any framework. If you find a case that the addon doe
 ### 1. Install
 
 ```sh
-npm install --save-dev storybook-anima
+npm install --save-dev storybook-anima --legacy-peer-deps
 # yarn add -D storybook-anima
 ```
 
