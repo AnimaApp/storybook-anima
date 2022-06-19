@@ -8265,11 +8265,6 @@ react-syntax-highlighter@^15.4.5:
     prismjs "^1.27.0"
     refractor "^3.6.0"
 
-react-tiny-popover@^7.0.1:
-  version "7.0.1"
-  resolved "https://registry.yarnpkg.com/react-tiny-popover/-/react-tiny-popover-7.0.1.tgz#efb396cae335f00a0767ad98b9579d28744aec9e"
-  integrity sha512-uV+nTZXkCtfPFQtoKwbfX8waaU7+b8LEOoyOUjtmRxqnH3KLX1FkPm7RU+RC8eXxtOe4rC1cuhOIbQFcc71vQQ==
-
 react-transition-group@^4.4.2:
   version "4.4.2"
   resolved "https://registry.yarnpkg.com/react-transition-group/-/react-transition-group-4.4.2.tgz#8b59a56f09ced7b55cbd53c36768b922890d5470"
