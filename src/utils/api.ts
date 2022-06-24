@@ -11,6 +11,7 @@ export interface StoryVariant {
   args?: Record<string, any>;
   initial_args?: Record<string, any>;
   is_default?: boolean;
+  use_external_resources?: boolean;
 }
 
 export interface StoryPayload {
@@ -97,7 +98,9 @@ export const authenticate = async (storybookToken: string) => {
     }
     if (res.status > 299) {
       const json = await res.json();
-      const message = json?.message || "Missing team token. Please read the installation instructions.";
+      const message =
+        json?.message ||
+        "Missing team token. Please read the installation instructions.";
       return { isAuthenticated: false, message };
     }
     return errorRes;

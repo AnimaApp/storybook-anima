@@ -8,7 +8,7 @@ export default {
   argTypes: {
     checked: { control: 'boolean' },
     disabled: { control: 'boolean' },
-  },
+  }
 };
 
 const Template = (args) => <Component {...args} />;
