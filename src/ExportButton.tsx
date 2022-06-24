@@ -11,6 +11,7 @@ import {
   State,
   useArgTypes,
   ArgTypes,
+  useParameter,
 } from "@storybook/api";
 import { Args } from "@storybook/addons";
 import {
@@ -249,7 +250,8 @@ const doExport = async (
 
 const getStoryPayload = async (
   api: API,
-  argTypes: ArgTypes
+  argTypes: ArgTypes,
+  { isSRR } = { isSRR: false }
 ): Promise<StoryPayload> => {
   const story = api.getCurrentStoryData() as Story;
 
@@ -343,6 +345,7 @@ const getStoryPayload = async (
       variant_id: variantID,
       args: is_default ? { ...story.initialArgs, ...variant } : variant,
       is_default,
+      use_external_resources: isSRR,
     });
   }
 
@@ -371,6 +374,7 @@ export const ExportButton: React.FC<SProps> = () => {
     message: "",
   });
   const argTypes = useRef({});
+  const serverParams = useRef(null);
 
   useChannel({
     [SET_AUTH]: ({ isAuthenticated, message = "" }) => {
@@ -391,8 +395,9 @@ export const ExportButton: React.FC<SProps> = () => {
   const isMainThread = window.location === window.parent.location;
   const api = useStorybookApi();
   const state = useStorybookState();
-
   argTypes.current = useArgTypes();
+  // https://github.com/storybookjs/storybook/tree/main/app/server#getting-started
+  serverParams.current = useParameter<Record<string, any>>("server", {});
 
   // Export button click trigger (triggered only in the main thread)
   const handleExportClick = (action: string) => {
@@ -416,7 +421,9 @@ export const ExportButton: React.FC<SProps> = () => {
         try {
           api.selectStory(storyId);
 
-          const storyPayload = await getStoryPayload(api, argTypes.current);
+          const storyPayload = await getStoryPayload(api, argTypes.current, {
+            isSRR: !!serverParams.current?.url,
+          });
 
           if (storyPayload.variants.length === 0) {
             return;
