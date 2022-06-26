@@ -43,7 +43,6 @@ const getWrappedComponentDisplayName = (Component: any): string => {
 };
 
 export const getReactElementDisplayName = (element: ReactElement<any>): string => {
-  debugger
   switch (true) {
     case typeof element.type === "string":
       // @ts-ignore
