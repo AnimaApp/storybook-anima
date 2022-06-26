@@ -364,6 +364,7 @@ const getStoryPayload = async (
     storybookStoryId: storyId,
     isSample,
     isUsingEditor,
+    initialArgs: story.initialArgs,
   };
 };
 

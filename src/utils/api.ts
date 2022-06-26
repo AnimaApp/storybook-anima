@@ -1,6 +1,7 @@
 import { API_URL, STORYBOOK_ANIMA_TOKEN } from "../constants";
 import { capitalize, isBoolean, isString } from "./helpers";
 import { Args, ArgTypes } from "@storybook/api";
+import { stringifyArgTypes } from "./argTypesStringify";
 
 const STORYBOOK_SERVICE = `${API_URL}/services/s2f`;
 
@@ -26,6 +27,7 @@ export interface StoryPayload {
   isSample: boolean;
   isUsingEditor: boolean;
   source: string | undefined;
+  initialArgs: Args;
 }
 
 export const getStorybook = async (storybookZipHash: string) => {
@@ -142,9 +144,9 @@ export const createStoryRequest = async (
     argTypes,
     isSample,
     source,
+    initialArgs,
   } = payload;
   if (!storybookToken) throw new Error("No storybook token");
-
   const body = JSON.stringify({
     fingerprint,
     default_preview_url_args,
@@ -155,8 +157,9 @@ export const createStoryRequest = async (
     with_variants: true,
     is_using_editor: isUsingEditor,
     is_sample: isSample,
-    argTypesJSON: JSON.stringify(argTypes),
+    argTypesJSON: stringifyArgTypes(argTypes),
     source,
+    initial_args: JSON.stringify(initialArgs),
   });
 
   return fetch(`${STORYBOOK_SERVICE}/storybook/${storybookId}/stories`, {
