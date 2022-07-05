@@ -27,6 +27,8 @@ Learn more about the motivations and benefits in our [our blog post](https://blo
 
 This addon should work with any framework. If you find a case that the addon does not work, please open an issue.
 
+> :warning:  Currently, we only support Wepback builders, if you use a custom builder for storybook for example, `vite` or one of storybook's experimental features, please write to us or open an issue as the addon might not work as expected. 
+
 ## Getting started
 
 ### 1. Install
