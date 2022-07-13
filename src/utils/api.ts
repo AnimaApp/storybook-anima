@@ -1,8 +1,8 @@
-import { parseDSTokens } from "./parseDSTokens";
 import { API_URL, STORYBOOK_ANIMA_TOKEN } from "../constants";
 import { capitalize, isBoolean, isString } from "./helpers";
 import { Args, ArgTypes } from "@storybook/api";
 import { stringifyArgTypes } from "./argTypesStringify";
+import { normalizeUserDSTokens } from "./parseDSTokens";
 
 const STORYBOOK_SERVICE = `${API_URL}/services/s2f`;
 
@@ -58,7 +58,7 @@ export const createStorybook = async ({
 
   if (!storybookToken) throw new Error("Storybook token is required");
 
-  const dsTokens = parseDSTokens(dsJSON);
+  const dsTokens = normalizeUserDSTokens(dsJSON);
 
   const res = await fetch(`${STORYBOOK_SERVICE}/storybook`, {
     method: "POST",

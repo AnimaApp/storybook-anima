@@ -1,13 +1,13 @@
 import { isObject } from "lodash";
+import ShortUniqueId from "short-unique-id";
+const uid = new ShortUniqueId({ length: 6 });
 
-export const parseDSTokens = (dsJSON: Record<string, string>) => {
+export const normalizeUserDSTokens = (dsJSON: Record<string, string>) => {
   if (!isObject(dsJSON)) return {};
 
   const map = {};
-
   for (const key in dsJSON) {
     const value = dsJSON[key];
-
     const isColor =
       CSS.supports("color", value) || CSS.supports("background-color", value);
     const isBoxShadow = CSS.supports("box-shadow", value);
@@ -25,7 +25,7 @@ export const parseDSTokens = (dsJSON: Record<string, string>) => {
       ? "EffectStyle"
       : "unknown";
 
-    map[key] = { name: key, value, type };
+    map[key] = { name: key, value, type, id: uid() };
   }
 
   return map;
