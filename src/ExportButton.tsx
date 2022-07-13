@@ -414,8 +414,6 @@ export const ExportButton: React.FC<SProps> = () => {
     DEFAULT_ANIMA_PARAMETERS
   );
 
-  console.warn("animaParams",animaParams.current);
-
   // Export button click trigger (triggered only in the main thread)
   const handleExportClick = (action: string) => {
     doExport(api, state, action, animaParams.current);

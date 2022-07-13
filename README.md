@@ -27,7 +27,7 @@ Learn more about the motivations and benefits in our [our blog post](https://blo
 
 This addon should work with any framework. If you find a case that the addon does not work, please open an issue.
 
-> :warning:  Currently, we only support Wepback builders, if you use a custom builder for storybook for example, `vite` or one of storybook's experimental features, please write to us or open an issue as the addon might not work as expected. 
+> :warning: Currently, we only support Wepback builders, if you use a custom builder for storybook for example, `vite` or one of storybook's experimental features, please write to us or open an issue as the addon might not work as expected.
 
 ## Getting started
 
@@ -60,11 +60,74 @@ You can create `.env` file in your project's root folder, or you can provide the
 STORYBOOK_ANIMA_TOKEN="<paste your TOKEN here>"
 ```
 
+# Design system tokens support
+
+In order for Anima to export your stories to Figma using your design system tokens by turning them into Figma styles please follow these simple steps
+Currently we support json files of this format
+
+By default Anima will try to look for a file called `design-system-tokens.json` in your Storybook static directory
+
+```json
+// public/design-system-tokens.json
+{
+  "--primary": "#ffcd29",
+  "--secondary": "#ffcd29",
+  "--text-primary": "#b86200",
+  "--text-secondary": "#1976D2"
+}
+```
+
+Make sure you have the file added to your storybook static directory folder (`public` in this case)
+
+```js
+// .storybook/main.js
+
+module.exports = {
+  stories: [],
+  addons: ["storybook-anima"],
+  staticDirs: ["../public"], // tells storybook to use this directory as a static directory
+};
+```
+
+Example : your project structure should look like something similar to this
+
+```
+root
+├── .storybook
+│   ├── preview.js
+│   ├── main.js
+│
+├── public
+│   ├── design-system-tokens.json
+│   ├── ...
+|
+├── package.json
+└── ....
+```
+
+OPTIONAL : if you want to rename your file to something different than `design-system-tokens.json` make sure to export a new parameter from your Storybook `preview.js`
+
+```js
+// .storybook/preview.js
+
+export const parameters = {
+  ...
+
+  anima: {
+    designTokens: {
+      filename: 'my-tokens.json'
+    },
+  },
+};
+
+
+```
+
 ## Considerations
 
 For the time being, this integration works best if the your stories composition consists of just the component itself, rather than complex stories with multiple examples or included documentation.
 
-#### In short, what you see in the Storybook story, is what you'll get in Figma.
+### In short, what you see in the Storybook story, is what you'll get in Figma.
 
 ## Limits on the number of variants
 

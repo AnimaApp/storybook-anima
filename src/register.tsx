@@ -47,12 +47,8 @@ const getZip = (
 
     const tokensFilename = `${baseTokensFilename}.json`;
 
-    console.log(tokensFilename);
-
     Promise.all([fetch("storybook_preview.zip"), fetch(tokensFilename)])
       .then(([zipRes, DSTRes]) => {
-        console.warn(zipRes, DSTRes);
-
         if (zipRes.status !== 200) {
           return [null, null];
         }
@@ -125,8 +121,6 @@ const uploadStorybook = async (
   uploadUrl: string,
   file: Blob
 ) => {
-  // console.log("___ UPLOADING ZIP ___");
-
   const uploadResponse = await promiseRetry(
     (doRetry) => {
       return uploadFile(uploadUrl, file).catch(doRetry);
@@ -135,10 +129,6 @@ const uploadStorybook = async (
   );
 
   const status = uploadResponse.status === 200 ? "complete" : "failed";
-
-  // status === "complete"
-  //   ? console.log("___ ZIP UPLOADED ___")
-  //   : console.log("___ ZIP UPLOAD FAILED ___");
   return updateStorybookUploadStatus(storybookId, status);
 };
 
