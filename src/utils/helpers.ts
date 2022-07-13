@@ -86,3 +86,11 @@ export const sleep = <T>(ms: number, returnValue: T): Promise<T> =>
 
 // Useful to await for the next JS event tick, that way the UI can update in the meantime
 export const nextTick = () => new Promise((resolve) => setTimeout(resolve, 0));
+
+export const baseName = (path: string) => {
+  var base = new String(path).substring(path.lastIndexOf("/") + 1);
+  if (base.lastIndexOf(".") != -1) {
+    base = base.substring(0, base.lastIndexOf("."));
+  }
+  return base;
+};

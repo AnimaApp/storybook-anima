@@ -46,9 +46,11 @@ import {
   SET_AUTH,
   SAMPLE_STORYBOOK_HOST,
   VARIANTS_COUNT_LIMIT,
+  DEFAULT_ANIMA_PARAMETERS,
 } from "./constants";
 import { choice, runSeed } from "./utils";
 import { buildArgsParam } from "./utils/argsQuery";
+import { AnimaParameters } from "./types";
 
 interface SProps {}
 
@@ -217,7 +219,8 @@ const getSupportedInitialArgs = (argTypes: ArgTypes, initialArgs: any) => {
 const doExport = async (
   api: API,
   state: State,
-  action = "create-single-story"
+  action = "create-single-story",
+  animaParameters: AnimaParameters
 ) => {
   const channel = api.getChannel();
   const isMainThread = window.location === window.parent.location;
@@ -230,7 +233,10 @@ const doExport = async (
     const story = api.getCurrentStoryData() as Story;
 
     if (!isDocsStory(story)) {
-      channel.emit(EXPORT_SINGLE_STORY, { storyId: story.id });
+      channel.emit(EXPORT_SINGLE_STORY, {
+        storyId: story.id,
+        animaParameters,
+      });
     } else {
       notify("Oups, you can only export components");
     }
@@ -242,7 +248,10 @@ const doExport = async (
       .map(([_, story]) => story)
       .filter((story: Story) => !isDocsStory(story) && story.isLeaf);
 
-    channel.emit(EXPORT_ALL_STORIES, { stories: componentStories });
+    channel.emit(EXPORT_ALL_STORIES, {
+      stories: componentStories,
+      animaParameters,
+    });
   }
 
   return Promise.resolve(true);
@@ -376,6 +385,7 @@ export const ExportButton: React.FC<SProps> = () => {
   });
   const argTypes = useRef({});
   const serverParams = useRef(null);
+  const animaParams = useRef(null);
 
   useChannel({
     [SET_AUTH]: ({ isAuthenticated, message = "" }) => {
@@ -399,10 +409,16 @@ export const ExportButton: React.FC<SProps> = () => {
   argTypes.current = useArgTypes();
   // https://github.com/storybookjs/storybook/tree/main/app/server#getting-started
   serverParams.current = useParameter<Record<string, any>>("server", {});
+  animaParams.current = useParameter<AnimaParameters>(
+    "anima",
+    DEFAULT_ANIMA_PARAMETERS
+  );
+
+  console.warn("animaParams",animaParams.current);
 
   // Export button click trigger (triggered only in the main thread)
   const handleExportClick = (action: string) => {
-    doExport(api, state, action);
+    doExport(api, state, action, animaParams.current);
   };
 
   const handleExportError = (e: any) => {

@@ -5,6 +5,7 @@ import promiseRetry from "promise-retry";
 import {
   ADDON_ID,
   ANIMA_ROOT_ID,
+  DEFAULT_ANIMA_PARAMETERS,
   EXPORT_ALL_STORIES,
   EXPORT_END,
   EXPORT_PROGRESS,
@@ -16,6 +17,7 @@ import {
 import { ExportButton } from "./ExportButton";
 import {
   authenticate,
+  baseName,
   createStorybook,
   getStorybook,
   getStorybookToken,
@@ -24,38 +26,60 @@ import {
   updateStorybookUploadStatus,
 } from "./utils";
 import { get } from "lodash";
+import md5 from "object-hash";
 import ReactDOM from "react-dom";
 import Banner from "./components/banner";
 import { uploadFile } from "./utils/upload";
+import { AnimaParameters } from "./types";
 
-const getZip = (): Promise<{ hash: string; blob: Blob }> => {
+const getZip = (
+  animaParameters: AnimaParameters
+): Promise<{ zipHash: string; zipBlob: Blob; dsJSON: any }> => {
   return new Promise((resolve, reject) => {
-    fetch("storybook_preview.zip")
-      .then((res) => {
-        if (res.status === 200) {
-          return res.blob();
+    animaParameters.designTokens.filename;
+    const baseTokensFilename = baseName(
+      get(
+        animaParameters,
+        "designTokens.filename",
+        DEFAULT_ANIMA_PARAMETERS.designTokens.filename
+      )
+    );
+
+    const tokensFilename = `${baseTokensFilename}.json`;
+
+    console.log(tokensFilename);
+
+    Promise.all([fetch("storybook_preview.zip"), fetch(tokensFilename)])
+      .then(([zipRes, DSTRes]) => {
+        console.warn(zipRes, DSTRes);
+
+        if (zipRes.status !== 200) {
+          return [null, null];
         }
-        return null;
+
+        return Promise.all([
+          zipRes.blob(),
+          DSTRes.status === 200 ? DSTRes.json() : null,
+        ]);
       })
-      .then((blob) => {
-        if (!blob) {
-          resolve({ blob: null, hash: null });
+      .then(([zipBlob, dsJSON]) => {
+        if (!zipBlob) {
+          resolve({ zipBlob: null, zipHash: null, dsJSON: null });
           return;
         }
-        const formData = new FormData();
-        formData.append("storybook_preview", blob, "storybook_preview.zip");
-        formData.append("storybook_auth_token", getStorybookToken());
+
         const fileReader = new FileReader();
-        fileReader.readAsArrayBuffer(blob);
+        fileReader.readAsArrayBuffer(zipBlob);
         fileReader.onloadend = function () {
           crypto.subtle
             .digest("SHA-256", fileReader.result as any)
             .then((hashBuffer) => {
               const hashArray = Array.from(new Uint8Array(hashBuffer)); // convert buffer to byte array
-              const hash = hashArray
+              const zipHash = hashArray
                 .map((b) => b.toString(16).padStart(2, "0"))
                 .join(""); // convert bytes to hex string
-              resolve({ hash, blob });
+
+              resolve({ zipHash, zipBlob, dsJSON });
             })
             .catch(reject);
         };
@@ -64,29 +88,34 @@ const getZip = (): Promise<{ hash: string; blob: Blob }> => {
   });
 };
 
-const getOrCreateStorybook = async () => {
-  return getZip().then(async ({ hash, blob }) => {
-    if (!blob) return { error: true };
+const getOrCreateStorybook = async ({
+  animaParameters,
+}: {
+  animaParameters: AnimaParameters;
+}) => {
+  return getZip(animaParameters).then(async ({ zipBlob, zipHash, dsJSON }) => {
+    if (!zipBlob) return { error: true };
+
+    const hash =
+      dsJSON && zipHash ? md5({ zip: zipHash, ds: dsJSON }) : zipHash;
 
     const res = await getStorybook(hash);
     let data: Record<string, any> = {};
-    let isNewHash = false;
 
     if (res.status === 200) {
       data = await res.json();
     } else if (res.status === 404) {
-      data = await createStorybook(hash);
+      data = await createStorybook({ hash, dsJSON });
     }
 
-    const { id, upload_signed_url, upload_status="init" } = data;
+    const { id, upload_signed_url, upload_status = "init" } = data;
 
     return {
       storybookId: id,
       uploadUrl: upload_signed_url,
       uploadStatus: upload_status,
-      isNewHash,
       hash,
-      blob,
+      blob: zipBlob,
     };
   });
 };
@@ -168,9 +197,9 @@ addons.register(ADDON_ID, (api) => {
     workerFrame.src = window.location.href;
     document.body.appendChild(workerFrame);
 
-    channel.on(EXPORT_SINGLE_STORY, async ({ storyId }) => {
+    channel.on(EXPORT_SINGLE_STORY, async ({ storyId, animaParameters }) => {
       const { blob, hash, uploadStatus, storybookId, uploadUrl, error } =
-        await getOrCreateStorybook();
+        await getOrCreateStorybook({ animaParameters });
 
       if (error) {
         notify("Something went wrong. Please try again later.");
@@ -184,9 +213,9 @@ addons.register(ADDON_ID, (api) => {
       });
       workerFrame.contentDocument.dispatchEvent(ev);
     });
-    channel.on(EXPORT_ALL_STORIES, async ({ stories }) => {
+    channel.on(EXPORT_ALL_STORIES, async ({ stories, animaParameters }) => {
       const { blob, hash, uploadStatus, storybookId, uploadUrl, error } =
-        await getOrCreateStorybook();
+        await getOrCreateStorybook({ animaParameters });
 
       if (error) {
         notify("Something went wrong. Please try again later.");
@@ -217,7 +246,7 @@ addons.register(ADDON_ID, (api) => {
         .then(({ isAuthenticated, message }) => {
           channel.emit(SET_AUTH, {
             isAuthenticated,
-            message: message,  
+            message: message,
           });
           isAuthenticated = isAuthenticated;
         })
