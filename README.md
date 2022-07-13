@@ -63,9 +63,8 @@ STORYBOOK_ANIMA_TOKEN="<paste your TOKEN here>"
 # Design system tokens support
 
 In order for Anima to export your stories to Figma using your design system tokens by turning them into Figma styles please follow these simple steps
-Currently we support json files of this format
 
-By default Anima will try to look for a file called `design-system-tokens.json` in your Storybook static directory
+Currently we support json files of this format
 
 ```json
 // public/design-system-tokens.json
@@ -76,6 +75,8 @@ By default Anima will try to look for a file called `design-system-tokens.json` 
   "--text-secondary": "#1976D2"
 }
 ```
+
+By default Anima will try to look for a file called `design-system-tokens.json` in your Storybook static directory
 
 Make sure you have the file added to your storybook static directory folder (`public` in this case)
 
