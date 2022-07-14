@@ -78,7 +78,7 @@ const refToName = (refString: string) => {
 
 export { refToName };
 
-const findTrueValues = (groups: Record<string, any>) => {
+export const findTrueValues = (groups: Record<string, any>) => {
   const newGroups = JSON.parse(JSON.stringify(groups));
   let justPairs = {};
   Object.keys(newGroups).forEach((group) => {
@@ -129,8 +129,12 @@ const convertToDSTokenMap = (pairs: Record<string, string>): DSTokenMap => {
   }, {});
 };
 
-export const convertDSToJSON = (json: Record<string, any>) => {
+export const flattenToPairs = (json: Record<string, any>) => {
   const pairs = flattenJSON(json);
-  const resolvedPairs = findTrueValues({ pairs });
+  return findTrueValues({ pairs });
+};
+
+export const convertDSToJSON = (json: Record<string, any>) => {
+  const resolvedPairs = flattenToPairs(json);
   return convertToDSTokenMap(resolvedPairs);
 };

@@ -4,7 +4,7 @@
     "declaration": true,
     "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true,
-    "target": "es5",
+    "target": "ESNEXT",
     "jsx": "react",
     "allowJs": true,
     "module": "ES2015",
