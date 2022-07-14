@@ -64,65 +64,41 @@ STORYBOOK_ANIMA_TOKEN="<paste your TOKEN here>"
 
 In order for Anima to export your stories to Figma using your design system tokens by turning them into Figma styles please follow these simple steps
 
-Currently we support json files of this format
+## 1 - Prepare your design system tokens file
+
+The file should be written in the [standard JSON format](https://design-tokens.github.io/community-group/format/).
+
+Example :
 
 ```json
-// public/design-system-tokens.json
+// design-system-tokens.json
 {
-  "--primary": "#ffcd29",
-  "--secondary": "#ffcd29",
-  "--text-primary": "#b86200",
-  "--text-secondary": "#1976D2"
+  "--primary": {
+    "$value": "#1976D2"
+  },
+  "--secondary": {
+    "$value": "#ffcd29"
+  }
 }
 ```
 
-By default Anima will try to look for a file called `design-system-tokens.json` in your Storybook static directory
+## 2 - Add your design system tokens file to the storybook preview
 
-Make sure you have the file added to your storybook static directory folder (`public` in this case)
-
-```js
-// .storybook/main.js
-
-module.exports = {
-  stories: [],
-  addons: ["storybook-anima"],
-  staticDirs: ["../public"], // tells storybook to use this directory as a static directory
-};
-```
-
-Example : your project structure should look like something similar to this
-
-```
-root
-├── .storybook
-│   ├── preview.js
-│   ├── main.js
-│
-├── public
-│   ├── design-system-tokens.json
-│   ├── ...
-|
-├── package.json
-└── ....
-```
-
-OPTIONAL : if you want to rename your file to something different than `design-system-tokens.json` make sure to export a new parameter from your Storybook `preview.js`
+Go to `.storybook/preview.js` and export a new parameter called `anima` with the path of your design system tokens file under `designTokens`
 
 ```js
 // .storybook/preview.js
-
 export const parameters = {
   ...
-
   anima: {
-    designTokens: {
-      filename: 'my-tokens.json'
-    },
+    designTokens: require('../design-system-tokens.json')
   },
 };
 
 
 ```
+
+That is it, now if you have components that use these design tokens they will be exported to FIgma as components using native Figma styles
 
 ## Considerations
 

@@ -2,7 +2,7 @@ import { API_URL, STORYBOOK_ANIMA_TOKEN } from "../constants";
 import { capitalize, isBoolean, isString } from "./helpers";
 import { Args, ArgTypes } from "@storybook/api";
 import { stringifyArgTypes } from "./argTypesStringify";
-import { normalizeUserDSTokens } from "./parseDSTokens";
+import { convertDSToJSON } from "./parseDSTokens";
 
 const STORYBOOK_SERVICE = `${API_URL}/services/s2f`;
 
@@ -47,18 +47,24 @@ export const getStorybook = async (storybookZipHash: string) => {
 
 interface CreateStorybookPayload {
   hash: string;
-  dsJSON: Record<string, string>;
+  DSJSON: Record<string, string>;
 }
 
 export const createStorybook = async ({
-  dsJSON,
+  DSJSON,
   hash,
 }: CreateStorybookPayload) => {
   const storybookToken = getStorybookToken();
 
   if (!storybookToken) throw new Error("Storybook token is required");
 
-  const dsTokens = normalizeUserDSTokens(dsJSON);
+  let convertedDSJSON = {};
+
+  try {
+    convertedDSJSON = convertDSToJSON(DSJSON);
+  } catch (error) {
+    console.log(error);
+  }
 
   const res = await fetch(`${STORYBOOK_SERVICE}/storybook`, {
     method: "POST",
@@ -68,7 +74,7 @@ export const createStorybook = async ({
     },
     body: JSON.stringify({
       storybook_hash: hash,
-      ds_tokens: JSON.stringify(dsTokens),
+      ds_tokens: JSON.stringify(convertedDSJSON),
     }),
   });
 

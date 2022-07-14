@@ -385,7 +385,7 @@ export const ExportButton: React.FC<SProps> = () => {
   });
   const argTypes = useRef({});
   const serverParams = useRef(null);
-  const animaParams = useRef(null);
+  const animaParams = useRef<AnimaParameters>(null);
 
   useChannel({
     [SET_AUTH]: ({ isAuthenticated, message = "" }) => {

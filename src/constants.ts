@@ -22,7 +22,5 @@ export const SAMPLE_STORYBOOK_HOST = "animaapp.github.io";
 export const STORYBOOK_ANIMA_TOKEN = process.env.STORYBOOK_ANIMA_TOKEN;
 
 export const DEFAULT_ANIMA_PARAMETERS: AnimaParameters = {
-  designTokens: {
-    filename: "design-system-tokens.json",
-  },
+  designTokens: {},
 };

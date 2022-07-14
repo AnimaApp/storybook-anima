@@ -5,7 +5,6 @@ import promiseRetry from "promise-retry";
 import {
   ADDON_ID,
   ANIMA_ROOT_ID,
-  DEFAULT_ANIMA_PARAMETERS,
   EXPORT_ALL_STORIES,
   EXPORT_END,
   EXPORT_PROGRESS,
@@ -17,11 +16,11 @@ import {
 import { ExportButton } from "./ExportButton";
 import {
   authenticate,
-  baseName,
   createStorybook,
   getStorybook,
   getStorybookToken,
   injectCustomStyles,
+  isJSON,
   notify,
   updateStorybookUploadStatus,
 } from "./utils";
@@ -32,35 +31,19 @@ import Banner from "./components/banner";
 import { uploadFile } from "./utils/upload";
 import { AnimaParameters } from "./types";
 
-const getZip = (
-  animaParameters: AnimaParameters
-): Promise<{ zipHash: string; zipBlob: Blob; dsJSON: any }> => {
+const getZip = (): Promise<{ zipHash: string; zipBlob: Blob }> => {
   return new Promise((resolve, reject) => {
-    animaParameters.designTokens.filename;
-    const baseTokensFilename = baseName(
-      get(
-        animaParameters,
-        "designTokens.filename",
-        DEFAULT_ANIMA_PARAMETERS.designTokens.filename
-      )
-    );
-
-    const tokensFilename = `${baseTokensFilename}.json`;
-
-    Promise.all([fetch("storybook_preview.zip"), fetch(tokensFilename)])
-      .then(([zipRes, DSTRes]) => {
+    fetch("storybook_preview.zip")
+      .then((zipRes) => {
         if (zipRes.status !== 200) {
-          return [null, null];
+          return null;
         }
 
-        return Promise.all([
-          zipRes.blob(),
-          DSTRes.status === 200 ? DSTRes.json() : null,
-        ]);
+        return zipRes.blob();
       })
-      .then(([zipBlob, dsJSON]) => {
+      .then((zipBlob) => {
         if (!zipBlob) {
-          resolve({ zipBlob: null, zipHash: null, dsJSON: null });
+          resolve({ zipBlob: null, zipHash: null });
           return;
         }
 
@@ -75,7 +58,7 @@ const getZip = (
                 .map((b) => b.toString(16).padStart(2, "0"))
                 .join(""); // convert bytes to hex string
 
-              resolve({ zipHash, zipBlob, dsJSON });
+              resolve({ zipHash, zipBlob });
             })
             .catch(reject);
         };
@@ -89,11 +72,13 @@ const getOrCreateStorybook = async ({
 }: {
   animaParameters: AnimaParameters;
 }) => {
-  return getZip(animaParameters).then(async ({ zipBlob, zipHash, dsJSON }) => {
+  return getZip().then(async ({ zipBlob, zipHash }) => {
     if (!zipBlob) return { error: true };
 
+    const designTokens = get(animaParameters, "designTokens", null);
+    const DSJSON = isJSON(JSON.stringify(designTokens)) ? designTokens : null;
     const hash =
-      dsJSON && zipHash ? md5({ zip: zipHash, ds: dsJSON }) : zipHash;
+      DSJSON && zipHash ? md5({ zip: zipHash, ds: DSJSON }) : zipHash;
 
     const res = await getStorybook(hash);
     let data: Record<string, any> = {};
@@ -101,7 +86,7 @@ const getOrCreateStorybook = async ({
     if (res.status === 200) {
       data = await res.json();
     } else if (res.status === 404) {
-      data = await createStorybook({ hash, dsJSON });
+      data = await createStorybook({ hash, DSJSON });
     }
 
     const { id, upload_signed_url, upload_status = "init" } = data;
