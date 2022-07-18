@@ -62,7 +62,9 @@ STORYBOOK_ANIMA_TOKEN="<paste your TOKEN here>"
 
 # Design system tokens support
 
-In order for Anima to export your stories to Figma using your design system tokens by turning them into Figma styles please follow these simple steps
+Anima can also use your design tokens when generating stories, automatically converting them to Figma styles.
+
+To enable this feature, please follow these steps:
 
 ## 1 - Prepare your design system tokens file
 
@@ -98,7 +100,7 @@ export const parameters = {
 
 ```
 
-That is it, now if you have components that use these design tokens they will be exported to FIgma as components using native Figma styles
+That is it, now if you have components that use these design tokens they will be exported to Figma as components using native Figma styles.
 
 ## Considerations
 
