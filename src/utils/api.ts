@@ -2,6 +2,7 @@ import { API_URL, STORYBOOK_ANIMA_TOKEN } from "../constants";
 import { capitalize, isBoolean, isString } from "./helpers";
 import { Args, ArgTypes } from "@storybook/api";
 import { stringifyArgTypes } from "./argTypesStringify";
+import { convertDSToJSON } from "./parseDSTokens";
 
 const STORYBOOK_SERVICE = `${API_URL}/services/s2f`;
 
@@ -43,10 +44,27 @@ export const getStorybook = async (storybookZipHash: string) => {
     },
   });
 };
-export const createStorybook = async (storybookHash: string) => {
+
+interface CreateStorybookPayload {
+  hash: string;
+  DSJSON: Record<string, string>;
+}
+
+export const createStorybook = async ({
+  DSJSON,
+  hash,
+}: CreateStorybookPayload) => {
   const storybookToken = getStorybookToken();
 
   if (!storybookToken) throw new Error("Storybook token is required");
+
+  let convertedDSJSON = {};
+
+  try {
+    convertedDSJSON = convertDSToJSON(DSJSON);
+  } catch (error) {
+    console.log(error);
+  }
 
   const res = await fetch(`${STORYBOOK_SERVICE}/storybook`, {
     method: "POST",
@@ -54,7 +72,10 @@ export const createStorybook = async (storybookHash: string) => {
       "Content-Type": "application/json",
       Authorization: "Bearer " + storybookToken,
     },
-    body: JSON.stringify({ storybook_hash: storybookHash }),
+    body: JSON.stringify({
+      storybook_hash: hash,
+      ds_tokens: JSON.stringify(convertedDSJSON),
+    }),
   });
 
   if (res.status === 200) {

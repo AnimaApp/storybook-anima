@@ -27,7 +27,7 @@ Learn more about the motivations and benefits in our [our blog post](https://blo
 
 This addon should work with any framework. If you find a case that the addon does not work, please open an issue.
 
-> :warning:  Currently, we only support Wepback builders, if you use a custom builder for storybook for example, `vite` or one of storybook's experimental features, please write to us or open an issue as the addon might not work as expected. 
+> :warning: Currently, we only support Wepback builders, if you use a custom builder for storybook for example, `vite` or one of storybook's experimental features, please write to us or open an issue as the addon might not work as expected.
 
 ## Getting started
 
@@ -60,11 +60,53 @@ You can create `.env` file in your project's root folder, or you can provide the
 STORYBOOK_ANIMA_TOKEN="<paste your TOKEN here>"
 ```
 
+# Design system tokens support
+
+Anima can also use your design tokens when generating stories, automatically converting them to Figma styles.
+
+To enable this feature, please follow these steps:
+
+## 1 - Prepare your design system tokens file
+
+The file should be written in the [standard JSON format](https://design-tokens.github.io/community-group/format/).
+
+Example :
+
+```json
+// design-system-tokens.json
+{
+  "--primary": {
+    "$value": "#1976D2"
+  },
+  "--secondary": {
+    "$value": "#ffcd29"
+  }
+}
+```
+
+## 2 - Add your design system tokens file to the storybook preview
+
+Go to `.storybook/preview.js` and export a new parameter called `anima` with the path of your design system tokens file under `designTokens`
+
+```js
+// .storybook/preview.js
+export const parameters = {
+  ...
+  anima: {
+    designTokens: require('../design-system-tokens.json')
+  },
+};
+
+
+```
+
+That is it, now if you have components that use these design tokens they will be exported to Figma as components using native Figma styles.
+
 ## Considerations
 
 For the time being, this integration works best if the your stories composition consists of just the component itself, rather than complex stories with multiple examples or included documentation.
 
-#### In short, what you see in the Storybook story, is what you'll get in Figma.
+### In short, what you see in the Storybook story, is what you'll get in Figma.
 
 ## Limits on the number of variants
 

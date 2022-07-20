@@ -20,42 +20,45 @@ import {
   getStorybook,
   getStorybookToken,
   injectCustomStyles,
+  isJSON,
   notify,
   updateStorybookUploadStatus,
 } from "./utils";
 import { get } from "lodash";
+import md5 from "object-hash";
 import ReactDOM from "react-dom";
 import Banner from "./components/banner";
 import { uploadFile } from "./utils/upload";
+import { AnimaParameters } from "./types";
 
-const getZip = (): Promise<{ hash: string; blob: Blob }> => {
+const getZip = (): Promise<{ zipHash: string; zipBlob: Blob }> => {
   return new Promise((resolve, reject) => {
     fetch("storybook_preview.zip")
-      .then((res) => {
-        if (res.status === 200) {
-          return res.blob();
+      .then((zipRes) => {
+        if (zipRes.status !== 200) {
+          return null;
         }
-        return null;
+
+        return zipRes.blob();
       })
-      .then((blob) => {
-        if (!blob) {
-          resolve({ blob: null, hash: null });
+      .then((zipBlob) => {
+        if (!zipBlob) {
+          resolve({ zipBlob: null, zipHash: null });
           return;
         }
-        const formData = new FormData();
-        formData.append("storybook_preview", blob, "storybook_preview.zip");
-        formData.append("storybook_auth_token", getStorybookToken());
+
         const fileReader = new FileReader();
-        fileReader.readAsArrayBuffer(blob);
+        fileReader.readAsArrayBuffer(zipBlob);
         fileReader.onloadend = function () {
           crypto.subtle
             .digest("SHA-256", fileReader.result as any)
             .then((hashBuffer) => {
               const hashArray = Array.from(new Uint8Array(hashBuffer)); // convert buffer to byte array
-              const hash = hashArray
+              const zipHash = hashArray
                 .map((b) => b.toString(16).padStart(2, "0"))
                 .join(""); // convert bytes to hex string
-              resolve({ hash, blob });
+
+              resolve({ zipHash, zipBlob });
             })
             .catch(reject);
         };
@@ -64,29 +67,36 @@ const getZip = (): Promise<{ hash: string; blob: Blob }> => {
   });
 };
 
-const getOrCreateStorybook = async () => {
-  return getZip().then(async ({ hash, blob }) => {
-    if (!blob) return { error: true };
+const getOrCreateStorybook = async ({
+  animaParameters,
+}: {
+  animaParameters: AnimaParameters;
+}) => {
+  return getZip().then(async ({ zipBlob, zipHash }) => {
+    if (!zipBlob) return { error: true };
+
+    const designTokens = get(animaParameters, "designTokens", null);
+    const DSJSON = isJSON(JSON.stringify(designTokens)) ? designTokens : null;
+    const hash =
+      DSJSON && zipHash ? md5({ zip: zipHash, ds: DSJSON }) : zipHash;
 
     const res = await getStorybook(hash);
     let data: Record<string, any> = {};
-    let isNewHash = false;
 
     if (res.status === 200) {
       data = await res.json();
     } else if (res.status === 404) {
-      data = await createStorybook(hash);
+      data = await createStorybook({ hash, DSJSON });
     }
 
-    const { id, upload_signed_url, upload_status="init" } = data;
+    const { id, upload_signed_url, upload_status = "init" } = data;
 
     return {
       storybookId: id,
       uploadUrl: upload_signed_url,
       uploadStatus: upload_status,
-      isNewHash,
       hash,
-      blob,
+      blob: zipBlob,
     };
   });
 };
@@ -96,8 +106,6 @@ const uploadStorybook = async (
   uploadUrl: string,
   file: Blob
 ) => {
-  // console.log("___ UPLOADING ZIP ___");
-
   const uploadResponse = await promiseRetry(
     (doRetry) => {
       return uploadFile(uploadUrl, file).catch(doRetry);
@@ -106,10 +114,6 @@ const uploadStorybook = async (
   );
 
   const status = uploadResponse.status === 200 ? "complete" : "failed";
-
-  // status === "complete"
-  //   ? console.log("___ ZIP UPLOADED ___")
-  //   : console.log("___ ZIP UPLOAD FAILED ___");
   return updateStorybookUploadStatus(storybookId, status);
 };
 
@@ -168,9 +172,9 @@ addons.register(ADDON_ID, (api) => {
     workerFrame.src = window.location.href;
     document.body.appendChild(workerFrame);
 
-    channel.on(EXPORT_SINGLE_STORY, async ({ storyId }) => {
+    channel.on(EXPORT_SINGLE_STORY, async ({ storyId, animaParameters }) => {
       const { blob, hash, uploadStatus, storybookId, uploadUrl, error } =
-        await getOrCreateStorybook();
+        await getOrCreateStorybook({ animaParameters });
 
       if (error) {
         notify("Something went wrong. Please try again later.");
@@ -184,9 +188,9 @@ addons.register(ADDON_ID, (api) => {
       });
       workerFrame.contentDocument.dispatchEvent(ev);
     });
-    channel.on(EXPORT_ALL_STORIES, async ({ stories }) => {
+    channel.on(EXPORT_ALL_STORIES, async ({ stories, animaParameters }) => {
       const { blob, hash, uploadStatus, storybookId, uploadUrl, error } =
-        await getOrCreateStorybook();
+        await getOrCreateStorybook({ animaParameters });
 
       if (error) {
         notify("Something went wrong. Please try again later.");
@@ -217,7 +221,7 @@ addons.register(ADDON_ID, (api) => {
         .then(({ isAuthenticated, message }) => {
           channel.emit(SET_AUTH, {
             isAuthenticated,
-            message: message,  
+            message: message,
           });
           isAuthenticated = isAuthenticated;
         })

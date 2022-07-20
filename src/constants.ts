@@ -1,3 +1,4 @@
+import { AnimaParameters } from "./types";
 export const API_URL =
   localStorage.getItem("api_url") || "https://api.animaapp.com";
 export const PARAM_KEY = "export-stories";
@@ -19,3 +20,7 @@ export const ADDON_ID = "storybook/anima";
 
 export const SAMPLE_STORYBOOK_HOST = "animaapp.github.io";
 export const STORYBOOK_ANIMA_TOKEN = process.env.STORYBOOK_ANIMA_TOKEN;
+
+export const DEFAULT_ANIMA_PARAMETERS: AnimaParameters = {
+  designTokens: {},
+};
