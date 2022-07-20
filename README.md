@@ -72,8 +72,8 @@ The file should be written in the [standard JSON format](https://design-tokens.g
 
 Example :
 
+`design-system-tokens.json`
 ```json
-// design-system-tokens.json
 {
   "--primary": {
     "$value": "#1976D2"
