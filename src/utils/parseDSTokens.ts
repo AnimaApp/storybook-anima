@@ -4,11 +4,13 @@
 import ShortUniqueId from "short-unique-id";
 const uid = new ShortUniqueId({ length: 6 });
 
+type DSTokenType = "PAINT" | "TEXT" | "EFFECT" | "unknown";
+
 type DSToken = {
   name: string;
   value: string;
   id: string;
-  type: string;
+  type: DSTokenType;
 };
 
 export type DSTokenMap = Record<string, DSToken>;
@@ -98,7 +100,7 @@ export const findTrueValues = (groups: Record<string, any>) => {
   return justPairs;
 };
 
-const getDSTokenTypeByValue = (value: string) => {
+const getDSTokenTypeByValue = (value: string): DSTokenType => {
   const isColor =
     CSS.supports("color", value) || CSS.supports("background-color", value);
   const isBoxShadow = CSS.supports("box-shadow", value);
@@ -109,11 +111,11 @@ const getDSTokenTypeByValue = (value: string) => {
   const isEffectStyle = isBoxShadow;
 
   const type = isColor
-    ? "PaintStyle"
+    ? "PAINT"
     : isTextStyle
-    ? "TextStyle"
+    ? "TEXT"
     : isEffectStyle
-    ? "EffectStyle"
+    ? "EFFECT"
     : "unknown";
 
   return type;
