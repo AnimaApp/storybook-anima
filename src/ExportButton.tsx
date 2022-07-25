@@ -20,7 +20,9 @@ import {
   isBoolean,
   isEmpty,
   isNil,
+  isNull,
   isString,
+  isUndefined,
   omit,
   omitBy,
   uniqBy,
@@ -309,7 +311,13 @@ const getStoryPayload = async (
     let is_default = false;
 
     variant = Object.keys(variant)
-      .filter((key) => isBoolean(variant[key]) || isString(variant[key]))
+      .filter(
+        (key) =>
+          isBoolean(variant[key]) ||
+          isString(variant[key]) ||
+          isUndefined(variant[key]) ||
+          isNull(variant[key])
+      )
       .reduce((cur, key) => {
         return Object.assign(cur, { [key]: variant[key] });
       }, {});
