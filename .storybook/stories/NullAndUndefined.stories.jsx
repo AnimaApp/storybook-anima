@@ -2,7 +2,7 @@ import React from "react";
 import Button from "@mui/material/Button";
 
 export default {
-  title: "Example/NullAndUndefinedValues",
+  title: "EdgeCases/NullAndUndefinedValues",
   component: Button,
   argTypes: {
     variant: {

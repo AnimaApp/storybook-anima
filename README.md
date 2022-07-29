@@ -73,6 +73,7 @@ The file should be written in the [standard JSON format](https://design-tokens.g
 Example :
 
 `design-system-tokens.json`
+
 ```json
 {
   "--primary": {
@@ -107,6 +108,29 @@ That is it, now if you have components that use these design tokens they will be
 For the time being, this integration works best if the your stories composition consists of just the component itself, rather than complex stories with multiple examples or included documentation.
 
 ### In short, what you see in the Storybook story, is what you'll get in Figma.
+
+## Limitations with Boolean control types
+
+Due to a [Storybook bug](https://github.com/storybookjs/storybook/issues/18796), the addon can't correctly process boolean controls if they don't explicitly specify a `type`.
+
+For example, we could have some trouble processing Stories with the following `argTypes` definition,
+as the arguments don't explicity specify a `type`:
+
+```js
+  argTypes: {
+    disabled: { control: "boolean" },
+    isContained: { control: { type: "boolean" } },
+  },
+```
+
+In such cases, it's necessary to add an explicit type for each boolean control:
+
+```js
+  argTypes: {
+    disabled: { control: "boolean", type: "boolean" },
+    isContained: { control: { type: "boolean" }, type: "boolean" },
+  },
+```
 
 ## Limits on the number of variants
 

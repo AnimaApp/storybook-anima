@@ -49,10 +49,12 @@ import {
   SAMPLE_STORYBOOK_HOST,
   VARIANTS_COUNT_LIMIT,
   DEFAULT_ANIMA_PARAMETERS,
+  INVALID_BOOLEAN_ARGS_DETECTED,
 } from "./constants";
 import { choice, runSeed } from "./utils";
 import { buildArgsParam } from "./utils/argsQuery";
 import { AnimaParameters } from "./types";
+import { hasInvalidBooleanDefinitions } from "./utils/argTypesValidation";
 
 interface SProps {}
 
@@ -275,6 +277,23 @@ const getStoryPayload = async (
     story.initialArgs
   );
 
+  if (hasInvalidBooleanDefinitions(argTypes, story.initialArgs)) {
+    console.error(
+      "Detected invalid configuration: boolean controls must specify an explicit type to be correctly processed. " +
+        "Until you fix this, the resulting components might be missing some variants. " +
+        "For more information, please see: https://github.com/AnimaApp/storybook-anima#limitations-with-boolean-control-types"
+    );
+
+    parent.postMessage(
+      {
+        action: INVALID_BOOLEAN_ARGS_DETECTED,
+        source: "anima",
+        data: { storyName },
+      },
+      "*"
+    );
+  }
+
   const [variants, isUsingEditor, hadTrimmedVariants] =
     getTopNVariantsWithinLimit(story, argTypes);
 
@@ -408,6 +427,11 @@ export const ExportButton: React.FC<SProps> = () => {
       if (!error) {
         notify("Story synced successfully");
       }
+    },
+    [INVALID_BOOLEAN_ARGS_DETECTED]: () => {
+      notify(
+        "Detected invalid configuration, please see the logs for more information"
+      );
     },
   });
 
