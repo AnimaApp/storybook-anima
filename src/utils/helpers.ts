@@ -23,12 +23,20 @@ export const notify = (text: string): void => {
 
   (alertElement.firstElementChild as HTMLElement).style.opacity = "1";
 
+  // Add an offset for multiple alerts
+  const lowestPosition = Math.max(
+    ...[...document.getElementsByClassName("anima-alert-container")].map(
+      (element) => element.getBoundingClientRect().bottom
+    )
+  );
+  alertElement.style.top = `${lowestPosition}px`;
+
   setTimeout(() => {
     (alertElement.firstElementChild as HTMLElement).style.opacity = "0";
     requestAnimationFrame(() => {
       alertElement.remove();
     });
-  }, 2500);
+  }, 3000);
 };
 
 export const downloadAsJSON = (data: Record<string, any>) => {

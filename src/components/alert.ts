@@ -3,7 +3,7 @@ import { createElementFromHTML } from "../utils";
 
 export const createAlert = (text: string): HTMLElement => {
   const htmlTemplate = `
-  <div style="${
+  <div class='anima-alert-container' style="${
     css`
       position: fixed;
       top: 0;

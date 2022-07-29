@@ -11,6 +11,7 @@ import {
   EXPORT_SINGLE_STORY,
   EXPORT_START,
   GET_AUTH,
+  INVALID_BOOLEAN_ARGS_DETECTED,
   SET_AUTH,
 } from "./constants";
 import { ExportButton } from "./ExportButton";
@@ -149,6 +150,11 @@ addons.register(ADDON_ID, (api) => {
               break;
             case EXPORT_PROGRESS:
               channel.emit(EXPORT_PROGRESS, data);
+              break;
+            case INVALID_BOOLEAN_ARGS_DETECTED:
+              channel.emit(INVALID_BOOLEAN_ARGS_DETECTED, {
+                storyName: data.storyName,
+              });
               break;
 
             default:
