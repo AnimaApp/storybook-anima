@@ -30,6 +30,7 @@
     "@storybook/docs-tools": "^6.5.0",
     "@storybook/source-loader": "^6.5.0",
     "babel-storybook-anima": "0.1.1",
+    "expr-eval": "^2.0.2",
     "fast-deep-equal": "^3.1.3",
     "flat": "^5.0.2",
     "lodash": "^4.17.21",
@@ -74,7 +75,7 @@
     "vitest": "^0.18.0"
   },
   "scripts": {
-    "dev": "start-storybook -p 6006",
+    "dev": "start-storybook -p 6006 --no-manager-cache",
     "sb:build": "build-storybook",
     "build": "rollup -c && tsc",
     "test": "vitest",
