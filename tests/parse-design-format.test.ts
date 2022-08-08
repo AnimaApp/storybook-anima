@@ -1,4 +1,8 @@
-import { flattenToPairs, findTrueValues } from "../src/utils/parseDSTokens";
+import {
+  flattenToPairs,
+  findTrueValues,
+  parseShadowObjectToString,
+} from "../src/utils/parseDSTokens";
 
 describe("Transform W3C design format to JSON", () => {
   describe("Flatten JSON", () => {
@@ -6,30 +10,32 @@ describe("Transform W3C design format to JSON", () => {
       const tokens = {
         "token-name": {
           $value: "token value",
+          type: "other",
         },
       };
 
       const expected = {
-        "token-name": "token value",
+        "token-name": { type: "other", value: "token value" },
       };
 
       const returned = flattenToPairs(tokens);
-      console.log(returned);
       expect(JSON.stringify(expected)).toEqual(JSON.stringify(returned));
     });
     test("multiple token", () => {
       const tokens = {
         "--primary": {
           $value: "#1976D2",
+          $type: "color",
         },
         "--secondary": {
           $value: "#ffcd29",
+          $type: "color",
         },
       };
 
       const expected = {
-        "--primary": "#1976D2",
-        "--secondary": "#ffcd29",
+        "--primary": { type: "color", value: "#1976D2" },
+        "--secondary": { type: "color", value: "#ffcd29" },
       };
 
       const returned = flattenToPairs(tokens);
@@ -38,50 +44,53 @@ describe("Transform W3C design format to JSON", () => {
 
     test("with description", () => {
       const tokens = {
-        "Button background": {
+        "button-background": {
           $value: "#777777",
+          type: "color",
           $description:
             "The background color for buttons in their normal state.",
         },
       };
 
       const expected = {
-        "Button-background": "#777777",
+        "button-background": { type: "color", value: "#777777" },
       };
 
       const returned = flattenToPairs(tokens);
-      console.log(returned);
       expect(JSON.stringify(expected)).toEqual(JSON.stringify(returned));
     });
     test("with groups and nested groups", () => {
       const tokens = {
-        "token uno": {
+        uno: {
           $value: "token value 1",
+          type: "other",
         },
-        "token group": {
-          "token dos": {
+        group: {
+          dos: {
             $value: "token value 2",
+            type: "other",
           },
-          "nested token group": {
-            "token tres": {
+          "nested group": {
+            tres: {
               $value: "token value 3",
+              type: "other",
             },
-            "Token cuatro": {
+            cuatro: {
               $value: "token value 4",
+              type: "other",
             },
           },
         },
       };
 
       const expected = {
-        "token-group-nested-token-group-Token-cuatro": "token value 4",
-        "token-group-nested-token-group-token-tres": "token value 3",
-        "token-group-token-dos": "token value 2",
-        "token-uno": "token value 1",
+        "group-dos": { type: "other", value: "token value 2" },
+        "group-nested-group-cuatro": { type: "other", value: "token value 4" },
+        "group-nested-group-tres": { type: "other", value: "token value 3" },
+        uno: { type: "other", value: "token value 1" },
       };
 
       const returned = flattenToPairs(tokens);
-      console.log(returned);
       expect(JSON.stringify(expected)).toEqual(JSON.stringify(returned));
     });
   });
@@ -89,13 +98,49 @@ describe("Transform W3C design format to JSON", () => {
   test("find/apply values if references are used", () => {
     const tokens = {
       color: {
-        "color-a": "#ffffff",
-        "color-b": "{color.a}",
-        "color-c": "{color.b}",
+        "color-a": { value: "#ffffff", type: "color" },
+        "color-b": { value: "{color.a}", type: "color" },
+        "color-c": { value: "{color.b}", type: "color" },
       },
     };
 
     const returned = findTrueValues(tokens);
-    expect(returned["color-c"]).toBe("#ffffff");
+    expect(returned["color-c"].value).toBe("#ffffff");
   });
+});
+
+describe("Parse Shadow Object to valid CSS string", () => {
+  test("single value", () => {
+    const shadow = {
+      color: "#000000",
+      x: "0",
+      y: "2",
+      blur: "4",
+      spread: "0",
+    };
+    const expected = "#000000 0px 2px 4px 0px";
+    const returned = parseShadowObjectToString(shadow);
+    expect(returned).toBe(expected);
+  }),
+    test("multiple values", () => {
+      const shadow = [
+        {
+          color: "#000000",
+          x: "0",
+          y: "2",
+          blur: "4",
+          spread: "0",
+        },
+        {
+          color: "#ffffff",
+          x: "4",
+          y: "-2",
+          blur: "4",
+          spread: "1",
+        },
+      ];
+      const expected = "#000000 0px 2px 4px 0px, #ffffff 4px -2px 4px 1px";
+      const returned = parseShadowObjectToString(shadow);
+      expect(returned).toBe(expected);
+    });
 });

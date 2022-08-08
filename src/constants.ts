@@ -25,3 +25,16 @@ export const STORYBOOK_ANIMA_TOKEN = process.env.STORYBOOK_ANIMA_TOKEN;
 export const DEFAULT_ANIMA_PARAMETERS: AnimaParameters = {
   designTokens: {},
 };
+
+export const SPEC_STRING_UNIT_TYPES = ["dimension"];
+
+export const CUSTOM_STRING_UNIT_TYPES = [
+  "spacing",
+  "lineHeights",
+  "borderRadius",
+  "fontSizes",
+];
+export const STRING_UNIT_TYPES = [
+  ...SPEC_STRING_UNIT_TYPES,
+  ...CUSTOM_STRING_UNIT_TYPES,
+];
