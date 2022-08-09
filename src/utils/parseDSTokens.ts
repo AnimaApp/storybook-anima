@@ -203,7 +203,7 @@ const convertToDSTokenMap = (pairs: Record<string, any>): DSTokenMap => {
   return Object.keys(pairs).reduce<DSTokenMap>((prev, key) => {
     const type = getDSTokenType(pairs[key]);
 
-    prev[key] = { id: uid(), name: key, value: pairs[key], type };
+    prev[key] = { id: uid(), name: key, value: pairs[key]?.value, type };
     return prev;
   }, {});
 };
@@ -215,6 +215,5 @@ export const flattenToPairs = (json: Record<string, any>) => {
 
 export const convertDSToJSON = (json: Record<string, any>) => {
   const resolvedPairs = flattenToPairs(json);
-  console.log(resolvedPairs);
   return convertToDSTokenMap(resolvedPairs);
 };
