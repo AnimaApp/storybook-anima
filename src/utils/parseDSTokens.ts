@@ -105,36 +105,6 @@ const flattenJSON = (tokens: Record<string, any>) => {
 const sortKeys = (object: Record<string, any>): Record<string, any> => {
   const objectCopy = { ...object };
 
-  const checkUnnecessaryPrefix = (object: Record<string, any>) => {
-    const keys = Object.keys(object);
-
-    if (keys.length === 1) return null;
-
-    let f = [];
-    let level = 0;
-    for (const key of keys) {
-      const s = key.split("-");
-      level = Math.max(level, s.length);
-      f.push(s[0]);
-    }
-
-    if (level <= 2 || f.length === 0 || !f.every((s) => s === f[0]))
-      return null;
-
-    return f[0];
-  };
-
-  while (true) {
-    const prefix = checkUnnecessaryPrefix(objectCopy);
-    if (!prefix) break;
-    const keys = Object.keys(objectCopy);
-    for (const key of keys) {
-      const newKey = key.replace(`${prefix}-`, "");
-      objectCopy[newKey] = objectCopy[key];
-      delete objectCopy[key];
-    }
-  }
-
   return Object.keys(objectCopy)
     .sort()
     .reduce(
@@ -177,12 +147,20 @@ export const findTrueValues = (groups: Record<string, any>) => {
         map[camelCase(ref)] = justPairs[name]?.value;
       }
 
-      value = Parser.evaluate(expression, map)?.toString();
+      try {
+        value = Parser.evaluate(expression, map)?.toString();
+      } catch (error) {
+        value = "";
+      }
     }
     if (STRING_UNIT_TYPES.includes(type)) {
       value = getStringWithUnit(value);
     }
-    justPairs[pair] = { type, value };
+    if (value) {
+      justPairs[pair] = { type, value };
+    } else {
+      delete justPairs[pair];
+    }
   }
   return justPairs;
 };
@@ -237,5 +215,6 @@ export const flattenToPairs = (json: Record<string, any>) => {
 
 export const convertDSToJSON = (json: Record<string, any>) => {
   const resolvedPairs = flattenToPairs(json);
+  console.log(resolvedPairs);
   return convertToDSTokenMap(resolvedPairs);
 };
