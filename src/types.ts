@@ -15,10 +15,10 @@ export type DSTokenMap = Record<string, DSToken>;
 
 export interface ShadowToken {
   color: string;
-  offsetX?: string;
-  offsetY?: string;
-  x?: string;
-  y?: string;
-  blur: string;
-  spread: string;
+  offsetX?: string | number;
+  offsetY?: string | number;
+  x?: string | number;
+  y?: string | number;
+  blur: string | number;
+  spread: string | number;
 }

@@ -6,10 +6,14 @@ import ShortUniqueId from "short-unique-id";
 import { Parser } from "expr-eval";
 import { DSTokenMap, DSTokenType, ShadowToken } from "../types";
 import { STRING_UNIT_TYPES } from "../constants";
+import { isNumber } from "lodash/fp";
 const uid = new ShortUniqueId({ length: 6 });
 
-const getStringWithUnit = (inp: string) => {
-  if (!inp) return "";
+const getStringWithUnit = (inp: string | number) => {
+  if (!isString(inp) && !isNumber(inp)) return "";
+  if (isNumber(inp)) {
+    inp = String(inp);
+  }
   const re = /[^{\}]+(?=})/g;
 
   const matches = inp.match(re);
@@ -22,7 +26,7 @@ const getStringWithUnit = (inp: string) => {
   return output;
 };
 
-const getStringsWithUnit = (values: string[]): string[] => {
+const getStringsWithUnit = (values: (string | number)[]): string[] => {
   return values.map(getStringWithUnit);
 };
 

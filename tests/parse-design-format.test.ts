@@ -121,26 +121,51 @@ describe("Parse Shadow Object to valid CSS string", () => {
     const expected = "#000000 0px 2px 4px 0px";
     const returned = parseShadowObjectToString(shadow);
     expect(returned).toBe(expected);
-  }),
-    test("multiple values", () => {
-      const shadow = [
-        {
-          color: "#000000",
-          x: "0",
-          y: "2",
-          blur: "4",
-          spread: "0",
-        },
-        {
-          color: "#ffffff",
-          x: "4",
-          y: "-2",
-          blur: "4",
-          spread: "1",
-        },
-      ];
-      const expected = "#000000 0px 2px 4px 0px, #ffffff 4px -2px 4px 1px";
-      const returned = parseShadowObjectToString(shadow);
-      expect(returned).toBe(expected);
-    });
+  });
+
+  test("single value with number type", () => {
+    const shadow = {
+      color: "#000000",
+      x: 0,
+      y: 2,
+      blur: 4,
+      spread: 0,
+    };
+    const expected = "#000000 0px 2px 4px 0px";
+    const returned = parseShadowObjectToString(shadow);
+    expect(returned).toBe(expected);
+  });
+  test("single value with mix value types", () => {
+    const shadow = {
+      color: "#000000",
+      x: 0,
+      y: "2px",
+      blur: 4,
+      spread: "0",
+    };
+    const expected = "#000000 0px 2px 4px 0px";
+    const returned = parseShadowObjectToString(shadow);
+    expect(returned).toBe(expected);
+  });
+  test("multiple values", () => {
+    const shadow = [
+      {
+        color: "#000000",
+        x: "0",
+        y: "2",
+        blur: "4",
+        spread: "0",
+      },
+      {
+        color: "#ffffff",
+        x: 4,
+        y: -2,
+        blur: "4",
+        spread: "1px",
+      },
+    ];
+    const expected = "#000000 0px 2px 4px 0px, #ffffff 4px -2px 4px 1px";
+    const returned = parseShadowObjectToString(shadow);
+    expect(returned).toBe(expected);
+  });
 });
