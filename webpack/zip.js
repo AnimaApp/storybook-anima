@@ -33,13 +33,6 @@ ZipPlugin.prototype.apply = function (compiler) {
 
     const zipFile = new yazl.ZipFile();
 
-    const pathPrefix = options.pathPrefix || "";
-    const pathMapper =
-      options.pathMapper ||
-      function (x) {
-        return x;
-      };
-
     // populate the zip file with each asset
     for (const nameAndPath in compilation.assets) {
       if (!compilation.assets.hasOwnProperty(nameAndPath)) continue;
@@ -61,7 +54,7 @@ ZipPlugin.prototype.apply = function (compiler) {
           : Buffer.from
           ? Buffer.from(source)
           : new Buffer(source),
-        path.join(pathPrefix, pathMapper(nameAndPath)),
+        path.basename(nameAndPath),
         options.fileOptions
       );
     }
