@@ -58,7 +58,7 @@ import { hasInvalidBooleanDefinitions } from "./utils/argTypesValidation";
 
 interface SProps {}
 
-const SUPPORTED_ARG_TYPES = ["select", "radio", "boolean"];
+const SUPPORTED_ARG_TYPES = ["select", "radio", "inline-radio", "boolean"];
 const COMPLEX_CONTROLS: string[] = ["array", "object", "date", "range", "file"];
 
 const getArgType = (arg: InputType): string => {
@@ -87,6 +87,7 @@ const populateSeedObjectBasedOnArgType = (
   switch (argType) {
     case "select":
     case "radio":
+    case "inline-radio":
       seedObject[argKey] = choice(...argOptions);
       break;
     case "boolean":
@@ -137,7 +138,7 @@ const getVariants = (
       const arg = argTypes[key];
       const argType = getArgType(arg);
 
-      if (["select", "radio"].includes(argType)) {
+      if (["select", "radio", "inline-radio"].includes(argType)) {
         const options = getArgOptions(arg);
         return options.length > 0 ? options[0] : null;
       }
