@@ -29,6 +29,8 @@ export interface StoryPayload {
   isUsingEditor: boolean;
   source: string | undefined;
   initialArgs: Args;
+  componentId: string;
+  dependencies: string[];
 }
 
 export const getStorybook = async (storybookZipHash: string) => {
@@ -166,8 +168,13 @@ export const createStoryRequest = async (
     isSample,
     source,
     initialArgs,
+    dependencies,
+    componentId,
   } = payload;
   if (!storybookToken) throw new Error("No storybook token");
+
+  console.log(argTypes);
+
   const body = JSON.stringify({
     fingerprint,
     default_preview_url_args,
@@ -181,6 +188,8 @@ export const createStoryRequest = async (
     argTypesJSON: stringifyArgTypes(argTypes),
     source,
     initial_args: JSON.stringify(initialArgs),
+    dependencies,
+    component_id: componentId,
   });
 
   return fetch(`${STORYBOOK_SERVICE}/storybook/${storybookId}/stories`, {

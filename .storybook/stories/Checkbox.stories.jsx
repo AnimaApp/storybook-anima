@@ -1,22 +1,21 @@
 import React from 'react';
-import { default as Component } from '@mui/material/Checkbox';
+import Checkbox from '@mui/material/Checkbox';
 
 
 export default {
   title: 'Example/MUI Checkbox',
-  component: Component,
+  component: Checkbox,
   argTypes: {
     checked: { control: 'boolean' },
     disabled: { control: 'boolean' },
   },
 };
 
-const Template = (args) => <Component {...args} />;
-export const Checkbox = Template.bind({});
+const Template = (args) => <Checkbox {...args} />;
+export const CheckboxStory = Template.bind({});
 
-Checkbox.args = {
+CheckboxStory.args = {
   checked: true,
-  // disabled: false,
 };
 
 

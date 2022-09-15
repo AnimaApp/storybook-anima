@@ -27,4 +27,13 @@ Default.args = {
   disabled: false,
   size: 'medium',
 };
+export const WithIcon = Template.bind({});
+WithIcon.args = {
+  label: 'Button',
+  variant: 'contained',
+  color: 'primary',
+  disabled: false,
+  size: 'medium',
+  startIcon: <Delete />
+};
 

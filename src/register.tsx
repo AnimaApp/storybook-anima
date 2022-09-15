@@ -32,6 +32,22 @@ import Banner from "./components/banner";
 import { uploadFile } from "./utils/upload";
 import { AnimaParameters } from "./types";
 
+const createIframeWorker = (): HTMLIFrameElement => {
+  const el = document.createElement("iframe");
+  Object.assign(el.style, {
+    width: "100%",
+    height: "100%",
+    border: "none",
+    zIndex: -1,
+    visibility: "hidden",
+    position: "fixed",
+  });
+
+  el.src = window.location.href;
+  document.body.appendChild(el);
+  return el;
+};
+
 const getZip = (): Promise<{ zipHash: string; zipBlob: Blob }> => {
   return new Promise((resolve, reject) => {
     fetch("storybook_preview.zip")
@@ -165,35 +181,28 @@ addons.register(ADDON_ID, (api) => {
       false
     );
 
-    const workerFrame = document.createElement("iframe");
-    Object.assign(workerFrame.style, {
-      width: "100%",
-      height: "100%",
-      border: "none",
-      zIndex: -1,
-      visibility: "hidden",
-      position: "fixed",
-    });
+    const worker = createIframeWorker();
 
-    workerFrame.src = window.location.href;
-    document.body.appendChild(workerFrame);
+    channel.on(
+      EXPORT_SINGLE_STORY,
+      async ({ storyId, animaParameters, componentId, dependencies }) => {
+        const { blob, hash, uploadStatus, storybookId, uploadUrl, error } =
+          await getOrCreateStorybook({ animaParameters });
 
-    channel.on(EXPORT_SINGLE_STORY, async ({ storyId, animaParameters }) => {
-      const { blob, hash, uploadStatus, storybookId, uploadUrl, error } =
-        await getOrCreateStorybook({ animaParameters });
+        if (error) {
+          notify("Something went wrong. Please try again later.");
+          return;
+        }
+        if (uploadStatus !== "complete" && hash) {
+          uploadStorybook(storybookId, uploadUrl, blob);
+        }
+        const ev = new CustomEvent(EXPORT_SINGLE_STORY, {
+          detail: { storyId, storybookId, componentId, dependencies },
+        });
 
-      if (error) {
-        notify("Something went wrong. Please try again later.");
-        return;
+        worker.contentDocument.dispatchEvent(ev);
       }
-      if (uploadStatus !== "complete" && hash) {
-        uploadStorybook(storybookId, uploadUrl, blob);
-      }
-      const ev = new CustomEvent(EXPORT_SINGLE_STORY, {
-        detail: { storyId, storybookId },
-      });
-      workerFrame.contentDocument.dispatchEvent(ev);
-    });
+    );
     channel.on(EXPORT_ALL_STORIES, async ({ stories, animaParameters }) => {
       const { blob, hash, uploadStatus, storybookId, uploadUrl, error } =
         await getOrCreateStorybook({ animaParameters });
@@ -209,7 +218,7 @@ addons.register(ADDON_ID, (api) => {
       const ev = new CustomEvent(EXPORT_ALL_STORIES, {
         detail: { stories, storybookId },
       });
-      workerFrame.contentDocument.dispatchEvent(ev);
+      worker.contentDocument.dispatchEvent(ev);
     });
 
     channel.on(GET_AUTH, () => {
