@@ -1,232 +1,73 @@
 import React, { useEffect, useRef, useState } from "react";
 import { IconButton } from "@storybook/components";
-import md5 from "object-hash";
-import { InputType } from "@storybook/csf";
 import {
   API,
   useChannel,
   useStorybookApi,
-  Story,
   useStorybookState,
   State,
+  Story,
   useArgTypes,
-  ArgTypes,
   useParameter,
 } from "@storybook/api";
-import { Args } from "@storybook/addons";
-import {
-  get,
-  has,
-  isBoolean,
-  isEmpty,
-  isNil,
-  isNull,
-  isString,
-  isUndefined,
-  omit,
-  omitBy,
-  uniqBy,
-} from "lodash";
 
-import {
-  createStoryRequest,
-  escapeHtml,
-  getStorybookToken,
-  isDocsStory,
-  nextTick,
-  notify,
-  StoryPayload,
-  StoryVariant,
-} from "./utils";
+import { createStoryRequest, isDocsStory, notify } from "./utils";
 import {
   EXPORT_END,
   EXPORT_START,
-  EXPORT_PROGRESS,
   EXPORT_SINGLE_STORY,
-  EXPORT_ALL_STORIES,
   GET_AUTH,
   SET_AUTH,
-  SAMPLE_STORYBOOK_HOST,
-  VARIANTS_COUNT_LIMIT,
   DEFAULT_ANIMA_PARAMETERS,
   INVALID_BOOLEAN_ARGS_DETECTED,
+  SET_STORYBOOK_META,
+  SET_CURRENT_COMPONENT_ID,
 } from "./constants";
-import { choice, runSeed } from "./utils";
-import { buildArgsParam } from "./utils/argsQuery";
-import { AnimaParameters } from "./types";
-import { hasInvalidBooleanDefinitions } from "./utils/argTypesValidation";
+import { AnimaParameters, StorybookMetadata } from "./types";
+import { get } from "lodash";
+import { getStoryPayload } from "./story";
+
+const sendEventToParent = (action: string, data: Record<string, any>) => {
+  parent.postMessage({ action, source: "anima", data }, "*");
+};
+
+const handleExportError = (e: any) => {
+  console.error(e);
+  sendEventToParent(EXPORT_END, { error: true });
+};
 
 interface SProps {}
 
-const SUPPORTED_ARG_TYPES = ["select", "radio", "inline-radio", "boolean"];
-const COMPLEX_CONTROLS: string[] = ["array", "object", "date", "range", "file"];
+const getStoryDependencies = (story: Story, metadata: StorybookMetadata) => {
+  const dependencies = [];
+  const metadataPackages = metadata?.packages || {};
+  const metadataStories = metadata?.stories || {};
+  // const files = metadata?.files || {};
 
-const getArgType = (arg: InputType): string => {
-  let argType = "";
-  const control = arg?.control as { type?: string };
-  argType = control?.type;
-  if (!argType) {
-    argType = isString(arg.type) ? arg.type : arg.type?.name || "unknown";
-  }
-  return argType;
-};
+  const storyFile = get(story, "parameters.fileName", null);
+  const storyComponentId = get(story, "componentId", null);
 
-const getArgOptions = (arg: InputType): any[] => {
-  const options = arg?.options || arg?.control?.options || [];
-  return options;
-};
+  const entry = metadataStories[storyFile] || metadataStories[storyComponentId];
 
-const populateSeedObjectBasedOnArgType = (
-  seedObj: Record<string, any>,
-  arg: InputType,
-  argKey: string
-) => {
-  const seedObject = { ...seedObj };
-  const argType = getArgType(arg);
-  const argOptions = getArgOptions(arg);
-  switch (argType) {
-    case "select":
-    case "radio":
-    case "inline-radio":
-      seedObject[argKey] = choice(...argOptions);
-      break;
-    case "boolean":
-      seedObject[argKey] = choice(true, false);
-      break;
-  }
-  return seedObject;
-};
-
-const getVariants = (
-  story: Story,
-  argTypes: ArgTypes
-): [Record<string, any>[], boolean] => {
-  let seedObj = {};
-  let isUsingEditor = false;
-  const storyArgs = get(story, "args", {}) as Args;
-  const storyDefaultArgs = get(story, "initialArgs", {}) as Args;
-
-  if (argTypes) {
-    const argKeys = Object.keys(argTypes);
-
-    isUsingEditor = argKeys.some((argKey) =>
-      COMPLEX_CONTROLS.includes(getArgType(argTypes[argKey]))
+  if (entry) {
+    const packagesUsedByStory = Object.keys(entry.packages || {});
+    dependencies.push(
+      ...packagesUsedByStory.map((pkg) => metadataPackages[pkg]).filter(Boolean)
     );
-
-    for (const argKey of argKeys) {
-      const arg = argTypes[argKey];
-      const argType = getArgType(arg);
-
-      if (SUPPORTED_ARG_TYPES.includes(argType)) {
-        seedObj[argKey] = has(storyDefaultArgs, argKey)
-          ? storyDefaultArgs[argKey]
-          : has(storyArgs, argKey)
-          ? storyArgs[argKey]
-          : null;
-        seedObj = populateSeedObjectBasedOnArgType(seedObj, arg, argKey);
-      }
-    }
   }
 
-  seedObj = omitBy(seedObj, isNil);
-  let defaultVariant = {};
-  Object.keys(seedObj).forEach((key) => {
-    const getValue = (key: string) => {
-      if (has(storyDefaultArgs, key)) return storyDefaultArgs[key];
-      if (has(storyArgs, key)) return storyArgs[key];
-
-      const arg = argTypes[key];
-      const argType = getArgType(arg);
-
-      if (["select", "radio", "inline-radio"].includes(argType)) {
-        const options = getArgOptions(arg);
-        return options.length > 0 ? options[0] : null;
-      }
-      if (["boolean"].includes(argType)) {
-        return false;
-      }
-    };
-
-    defaultVariant[key] = getValue(key);
-  });
-
-  const hash = md5(defaultVariant);
-  defaultVariant["hash"] = hash;
-
-  const variants = (
-    !isEmpty(seedObj) ? runSeed(() => seedObj) : [defaultVariant]
-  ) as Record<string, any>[];
-  return [[defaultVariant, ...variants], isUsingEditor];
+  return dependencies;
 };
 
-const getTopNVariantsWithinLimit = (
-  story: Story,
-  argTypes: ArgTypes,
-  limit = VARIANTS_COUNT_LIMIT
-): [
-  variants: Record<string, any>[],
-  isUsingEditor: boolean,
-  hadTrimmedVariants: boolean
-] => {
-  const argTypeEntries = Object.entries(argTypes);
-  if (argTypeEntries.length === 0) {
-    return [...getVariants(story, argTypes), false];
-  }
-
-  let currentArgs: ArgTypes = {};
-  let previousVariants: [Record<string, any>[], boolean];
-  let hadTrimmedVariants = false;
-
-  for (const [argName, argValue] of argTypeEntries) {
-    currentArgs[argName] = argValue;
-    const variants = getVariants(story, currentArgs);
-
-    if (variants[0].length > limit) {
-      hadTrimmedVariants = true;
-      break;
-    } else {
-      previousVariants = variants;
-    }
-  }
-
-  if (hadTrimmedVariants) {
-    // If we had to trim variants, then we want the component to be classified as complex
-    return [previousVariants[0], true, hadTrimmedVariants];
-  } else {
-    return [...previousVariants, hadTrimmedVariants];
-  }
-};
-
-// Extract the properties we support from the initial args so that
-// the query building process can ignore them.
-const getSupportedInitialArgs = (argTypes: ArgTypes, initialArgs: any) => {
-  if (!initialArgs || !argTypes) {
-    return {};
-  }
-
-  const supportedArgs = {};
-
-  for (const [argName, arg] of Object.entries(argTypes)) {
-    const argType = getArgType(arg);
-    const initialArgValue = initialArgs[argName];
-
-    if (
-      SUPPORTED_ARG_TYPES.includes(argType) &&
-      initialArgValue !== undefined
-    ) {
-      supportedArgs[argName] = initialArgValue;
-    }
-  }
-
-  return supportedArgs;
-};
-
-const doExport = async (
-  api: API,
-  state: State,
-  action = "create-single-story",
-  animaParameters: AnimaParameters
-) => {
+const doExport = async (args: {
+  api: API;
+  state: State;
+  action: string;
+  animaParameters: AnimaParameters;
+  metadata: StorybookMetadata;
+  componentId: string | null;
+}) => {
+  const { api, action, metadata, animaParameters, componentId } = args;
   const channel = api.getChannel();
   const isMainThread = window.location === window.parent.location;
 
@@ -236,10 +77,13 @@ const doExport = async (
 
   if (action === EXPORT_SINGLE_STORY) {
     const story = api.getCurrentStoryData() as Story;
+    const deps = getStoryDependencies(story, metadata);
 
     if (!isDocsStory(story)) {
       channel.emit(EXPORT_SINGLE_STORY, {
         storyId: story.id,
+        componentId,
+        dependencies: deps,
         animaParameters,
       });
     } else {
@@ -247,162 +91,7 @@ const doExport = async (
     }
   }
 
-  if (action === EXPORT_ALL_STORIES) {
-    const stories = Object.entries(state.storiesHash);
-    const componentStories = stories
-      .map(([_, story]) => story)
-      .filter((story: Story) => !isDocsStory(story) && story.isLeaf);
-
-    channel.emit(EXPORT_ALL_STORIES, {
-      stories: componentStories,
-      animaParameters,
-    });
-  }
-
   return Promise.resolve(true);
-};
-
-const getStoryPayload = async (
-  api: API,
-  argTypes: ArgTypes,
-  { isSRR } = { isSRR: false }
-): Promise<StoryPayload> => {
-  const story = api.getCurrentStoryData() as Story;
-
-  const storyName = story?.name;
-  // Story type complains that there is not title in the story but it's okay
-  const storyTitle = (story as any)?.title || storyName;
-  const storyId = story?.id;
-  const supportedInitialArgs = getSupportedInitialArgs(
-    argTypes,
-    story.initialArgs
-  );
-
-  if (hasInvalidBooleanDefinitions(argTypes, story.initialArgs)) {
-    console.error(
-      "Detected invalid configuration: boolean controls must specify an explicit type to be correctly processed. " +
-        "Until you fix this, the resulting components might be missing some variants. " +
-        "For more information, please see: https://github.com/AnimaApp/storybook-anima#limitations-with-boolean-control-types"
-    );
-
-    parent.postMessage(
-      {
-        action: INVALID_BOOLEAN_ARGS_DETECTED,
-        source: "anima",
-        data: { storyName },
-      },
-      "*"
-    );
-  }
-
-  const [variants, isUsingEditor, hadTrimmedVariants] =
-    getTopNVariantsWithinLimit(story, argTypes);
-
-  if (hadTrimmedVariants) {
-    console.warn(
-      `Unable to export all controls for story: '${storyName}' as the resulting number of variants would have been too high. ` +
-        `You can solve this problem by explicitly specifying which props should be exported in the story definition files. ` +
-        `For more information, see: https://github.com/AnimaApp/storybook-anima#limits-on-the-number-of-variants`
-    );
-  }
-
-  let defaultArgsQuery = "";
-  const storyVariants: StoryVariant[] = [];
-  const uniqueVariants = uniqBy(variants, (e) => e.hash).slice(
-    0,
-    VARIANTS_COUNT_LIMIT
-  );
-
-  const hashArray = uniqueVariants.map((e) => e.hash);
-
-  if (uniqueVariants.length > 0) {
-    parent.postMessage(
-      {
-        action: EXPORT_START,
-        source: "anima",
-        data: { total: uniqueVariants.length, storyName, hadTrimmedVariants },
-      },
-      "*"
-    );
-  }
-
-  for (let i = 0; i < uniqueVariants.length; i++) {
-    let variant = omit(uniqueVariants[i], "hash");
-    let is_default = false;
-
-    variant = Object.keys(variant)
-      .filter(
-        (key) =>
-          isBoolean(variant[key]) ||
-          isString(variant[key]) ||
-          isUndefined(variant[key]) ||
-          isNull(variant[key])
-      )
-      .reduce((cur, key) => {
-        return Object.assign(cur, { [key]: variant[key] });
-      }, {});
-
-    // Every once in a while notify the progress
-    if (i % 50 === 0 || i === uniqueVariants.length - 1) {
-      window.parent.postMessage(
-        {
-          action: EXPORT_PROGRESS,
-          data: {
-            current: i + 1,
-            total: uniqueVariants.length,
-            storyName,
-            hadTrimmedVariants,
-          },
-          source: "anima",
-        },
-        "*"
-      );
-      // Wait for the UI to update
-      await nextTick();
-    }
-
-    const variantData = Object.keys(variant).map(
-      (key) => `${key}=${variant[key]}`
-    );
-    const variantID = escapeHtml(variantData.join(",") || "default");
-    const completeArgs = {
-      ...supportedInitialArgs,
-      ...variant,
-    };
-    const serializedArgs = buildArgsParam(supportedInitialArgs, completeArgs);
-    const query = `?path=/story/${story.id}&args=${serializedArgs}`;
-
-    if (i === 0) {
-      is_default = true;
-      defaultArgsQuery = query;
-    }
-
-    storyVariants.push({
-      html_url: `iframe.html${query}`,
-      variant_id: variantID,
-      args: is_default ? { ...story.initialArgs, ...variant } : variant,
-      is_default,
-      use_external_resources: isSRR,
-    });
-  }
-
-  const fingerprint = md5({ variants: hashArray, name: storyName });
-  const isSample = window.location.hostname === SAMPLE_STORYBOOK_HOST;
-
-  return {
-    storybookToken: getStorybookToken(),
-    argTypes,
-    source: story.parameters?.storySource?.source,
-    default_preview_url_args: defaultArgsQuery,
-    variants: storyVariants,
-    fingerprint,
-    name: storyName,
-    title: storyTitle,
-    storybookStoryId: storyId,
-    isSample,
-    isUsingEditor,
-    initialArgs: story.initialArgs,
-  };
 };
 
 export const ExportButton: React.FC<SProps> = () => {
@@ -411,6 +100,12 @@ export const ExportButton: React.FC<SProps> = () => {
     isAuthenticated: false,
     message: "",
   });
+  const metadata = useRef<StorybookMetadata>({
+    files: {},
+    packages: {},
+    stories: {},
+  });
+  const currentComponentId = useRef<string | null>("");
   const argTypes = useRef({});
   const serverParams = useRef(null);
   const animaParams = useRef<AnimaParameters>(null);
@@ -434,6 +129,12 @@ export const ExportButton: React.FC<SProps> = () => {
         "Detected invalid configuration, please see the logs for more information"
       );
     },
+    [SET_STORYBOOK_META]: (data) => {
+      metadata.current = data;
+    },
+    [SET_CURRENT_COMPONENT_ID]: (id: string | null) => {
+      currentComponentId.current = id;
+    },
   });
 
   const isMainThread = window.location === window.parent.location;
@@ -447,22 +148,12 @@ export const ExportButton: React.FC<SProps> = () => {
     DEFAULT_ANIMA_PARAMETERS
   );
 
-  // Export button click trigger (triggered only in the main thread)
-  const handleExportClick = (action: string) => {
-    doExport(api, state, action, animaParams.current);
-  };
-
-  const handleExportError = (e: any) => {
-    console.error(e);
-    parent.postMessage(
-      { action: EXPORT_END, source: "anima", data: { error: true } },
-      "*"
-    );
-  };
-
-  // Export single story handler
   const handleExportSingleStory = async (event: CustomEvent) => {
-    const { storyId, storybookId } = get(event, "detail", {});
+    const { storyId, storybookId, dependencies, componentId } = get(
+      event,
+      "detail",
+      {}
+    );
 
     try {
       if (storyId && storybookId) {
@@ -476,12 +167,12 @@ export const ExportButton: React.FC<SProps> = () => {
           if (storyPayload.variants.length === 0) {
             return;
           }
-
-          await createStoryRequest(storybookId, storyPayload);
-          parent.postMessage(
-            { action: EXPORT_END, source: "anima", data: { error: null } },
-            "*"
-          );
+          await createStoryRequest(storybookId, {
+            ...storyPayload,
+            dependencies,
+            componentId,
+          });
+          sendEventToParent(EXPORT_END, { error: null });
         } catch (error) {
           handleExportError(error);
         }
@@ -492,41 +183,11 @@ export const ExportButton: React.FC<SProps> = () => {
     }
   };
 
-  // Export full library handler
-  const handleExportAllStories = async (event: CustomEvent) => {
-    try {
-      const { stories = [], storybookId = "" } = get(event, "detail", {});
-
-      for (const story of stories) {
-        try {
-          api.selectStory(story.id);
-          const storyPayload = await getStoryPayload(api, argTypes.current);
-
-          if (storyPayload.variants.length === 0) {
-            continue;
-          }
-
-          await createStoryRequest(storybookId, storyPayload);
-        } catch (error) {
-          handleExportError(error);
-          continue;
-        }
-      }
-      parent.postMessage(
-        { action: EXPORT_END, source: "anima", data: { error: null } },
-        "*"
-      );
-    } catch (error) {
-      handleExportError(error);
-    }
-  };
-
   useEffect(() => {
     if (isMainThread) {
       api.getChannel().emit(GET_AUTH);
     } else {
       document.addEventListener(EXPORT_SINGLE_STORY, handleExportSingleStory);
-      document.addEventListener(EXPORT_ALL_STORIES, handleExportAllStories);
     }
 
     return () => {
@@ -534,10 +195,6 @@ export const ExportButton: React.FC<SProps> = () => {
         document.removeEventListener(
           EXPORT_SINGLE_STORY,
           handleExportSingleStory
-        );
-        document.removeEventListener(
-          EXPORT_ALL_STORIES,
-          handleExportAllStories
         );
       }
     };
@@ -554,7 +211,14 @@ export const ExportButton: React.FC<SProps> = () => {
           notify(authState.message);
           return;
         }
-        handleExportClick(EXPORT_SINGLE_STORY);
+        doExport({
+          api,
+          state,
+          action: EXPORT_SINGLE_STORY,
+          animaParameters: animaParams.current,
+          metadata: metadata.current,
+          componentId: currentComponentId.current,
+        });
       }}
     >
       {isExporting ? (

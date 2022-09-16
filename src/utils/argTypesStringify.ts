@@ -1,18 +1,22 @@
 import { ArgType, ArgTypes } from "@storybook/api";
-import { mapValues } from "lodash";
+import { isArray, mapValues } from "lodash";
 import { isValidElement } from "react";
 import { getReactElementDisplayName } from "./reactComponentName";
 
 function stringifyReactElement(reactElement: React.ReactElement) {
+  const eLChildren = reactElement.props?.children ?? [];
+
+  const children = isArray(eLChildren) ? eLChildren : [eLChildren];
+
   return {
     ...reactElement,
     props: {
       ...(reactElement.props || {}),
-      children: reactElement.props?.children?.map(stringifyReactElement),
+      children: children.map(stringifyReactElement),
     },
     type: getReactElementDisplayName(reactElement),
-    $$typeof: 'react.element',
-  }
+    $$typeof: "react.element",
+  };
 }
 
 function stringifyMappingValue(mappingValue: any) {
