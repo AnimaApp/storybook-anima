@@ -66,6 +66,7 @@
     "chromatic": "^6.4.3",
     "cssom": "^0.5.0",
     "enhanced-resolve": "^5.10.0",
+    "find-up": "^5.0.0",
     "jsdom": "^20.0.0",
     "rollup": "^2.64.0",
     "rollup-plugin-copy-glob": "^0.3.2",

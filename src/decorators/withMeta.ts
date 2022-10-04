@@ -5,33 +5,13 @@ import { sanitize } from "@storybook/csf";
 import { SET_CURRENT_COMPONENT_ID, SET_STORYBOOK_META } from "../constants";
 import { StorybookMetadata } from "../types";
 
-function copyAttributes(
-  source: Element,
-  target: Element,
-  excludedAttributes: string[] = []
-) {
-  return Array.from(source.attributes).forEach((attribute) => {
-    if (excludedAttributes.includes(attribute.name)) return;
-    target.setAttribute(attribute.nodeName, attribute.nodeValue);
-  });
-}
-
-const removeElementAttributes = (element: HTMLElement) => {
-  for (let i = 0; i < element.attributes.length; i++) {
-    element.removeAttribute(element.attributes[i].name);
-  }
-};
-
-const unWrap = (animaElement: HTMLSpanElement, removeAttributes = true) => {
-  removeAttributes && removeElementAttributes(animaElement);
-};
-
 export const withHTML = makeDecorator({
   name: "withMeta",
   parameterName: "html",
   skipIfNoParametersOrOptions: false,
   wrapper: (storyFn, context, { parameters = {} }) => {
     const channel = addons.getChannel();
+
     channel.emit(SET_CURRENT_COMPONENT_ID, context.componentId);
     setTimeout(() => {
       const rootSelector = parameters.root || "#root";
@@ -49,9 +29,11 @@ export const withHTML = makeDecorator({
               };
               delete value?.imports;
 
-              const storyKey = value.title || value.filename;
+              const storyKey = value.filename;
 
-              prev["stories"][storyKey] = value;
+              if (storyKey) {
+                prev["stories"][storyKey] = value;
+              }
 
               if (value.component) {
                 const packages = Object.keys(value.packages);
@@ -70,10 +52,6 @@ export const withHTML = makeDecorator({
                 }
 
                 if (key) {
-                  if (prev["packages"][key]) {
-                    console.warn("Duplicate key found: ", key, value);
-                  }
-
                   prev["packages"][key] = value.title || storyFileAsKey;
                 }
               }
@@ -94,28 +72,33 @@ export const withHTML = makeDecorator({
         channel.emit(SET_STORYBOOK_META, metadata);
         const metadataPackages = metadata?.packages || {};
 
-        const animaElements = Array.from(
+        const animaComments = Array.from(
           root.querySelectorAll<HTMLSpanElement>("[is-anima]")
-        );
+        )
+          .map((e) => e.previousSibling)
+          .filter((e) => e?.nodeType === Node.COMMENT_NODE) as Comment[];
 
-        if (animaElements.length === 0) return;
+        if (animaComments.length === 0) return;
 
-        for (const animaElement of animaElements) {
-          const elPkg = animaElement.getAttribute("data-package");
+        for (const animaComment of animaComments) {
+          const data = animaComment.data;
 
-          if (elPkg) {
-            animaElement.setAttribute(
-              "data-as-orphan",
-              metadataPackages[elPkg] ?? "true"
+          if (data) {
+            const { componentData } = JSON.parse(data) ?? {};
+            const { pkg, ...rest } = componentData ?? {};
+            const filename = pkg ? metadataPackages[pkg] : null;
+            animaComment.deleteData(0, data.length);
+            animaComment.insertData(
+              0,
+              "anima-metadata " +
+                JSON.stringify({
+                  componentData: {
+                    pkg,
+                    filename,
+                    ...rest,
+                  },
+                })
             );
-          }
-
-          if (animaElement.children.length > 1) {
-            unWrap(animaElement);
-          } else if (animaElement.children.length === 1) {
-            const child = animaElement.children[0];
-            copyAttributes(animaElement, child, ["is-anima"]);
-            unWrap(animaElement);
           }
         }
       }

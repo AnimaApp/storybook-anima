@@ -31,6 +31,7 @@ export interface StoryPayload {
   initialArgs: Args;
   componentId: string;
   dependencies: string[];
+  filename: string;
 }
 
 export const getStorybook = async (storybookZipHash: string) => {
@@ -170,10 +171,9 @@ export const createStoryRequest = async (
     initialArgs,
     dependencies,
     componentId,
+    filename,
   } = payload;
   if (!storybookToken) throw new Error("No storybook token");
-
-  console.log(argTypes);
 
   const body = JSON.stringify({
     fingerprint,
@@ -190,6 +190,7 @@ export const createStoryRequest = async (
     initial_args: JSON.stringify(initialArgs),
     dependencies,
     component_id: componentId,
+    filename,
   });
 
   return fetch(`${STORYBOOK_SERVICE}/storybook/${storybookId}/stories`, {

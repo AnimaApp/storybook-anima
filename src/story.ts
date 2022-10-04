@@ -336,5 +336,6 @@ export const getStoryPayload = async (
     isSample,
     isUsingEditor,
     initialArgs: story.initialArgs,
+    filename: get(story, "parameters.fileName", ""),
   };
 };
