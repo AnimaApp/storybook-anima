@@ -134,7 +134,6 @@ export const ExportButton: React.FC<SProps> = () => {
     message: "",
   });
   const metadata = useRef<StorybookMetadata>({
-    files: {},
     packages: {},
     stories: {},
   });
@@ -144,7 +143,10 @@ export const ExportButton: React.FC<SProps> = () => {
   const animaParams = useRef<AnimaParameters>(null);
 
   useChannel({
-    [SET_AUTH]: ({ isAuthenticated, message = "" }) => {
+    [SET_AUTH]: ({
+      isAuthenticated,
+      message = "Oops! Something went wrong",
+    }) => {
       setAuthState({ isAuthenticated, message });
     },
 

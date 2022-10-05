@@ -1,4 +1,7 @@
-import { ANIMA_STORY_WINDOW_KEY, ANIMA_FILE_WINDOW_KEY } from "./../constants";
+import {
+  ANIMA_STORY_WINDOW_KEY,
+  ANIMA_EXPORTS_WINDOW_KEY,
+} from "./../constants";
 import { makeDecorator, addons } from "@storybook/addons";
 
 import { sanitize } from "@storybook/csf";
@@ -14,93 +17,140 @@ export const withHTML = makeDecorator({
 
     channel.emit(SET_CURRENT_COMPONENT_ID, context.componentId);
     setTimeout(() => {
-      const rootSelector = parameters.root || "#root";
-      const root = document.querySelector<HTMLDivElement | null>(rootSelector);
-      if (root) {
-        const metadata = Object.keys(window).reduce<StorybookMetadata>(
-          (prev, curr) => {
-            const storyFileAsKey = curr.replace(ANIMA_STORY_WINDOW_KEY, "");
-            if (curr.startsWith(ANIMA_STORY_WINDOW_KEY)) {
-              const value = {
-                ...window[curr],
-                title: sanitize(window[curr]?.title ?? ""),
-                filename: storyFileAsKey,
-                packages: window[curr]?.imports ?? {},
-              };
-              delete value?.imports;
+      try {
+        const rootSelector = parameters.root || "#root";
+        const root =
+          document.querySelector<HTMLDivElement | null>(rootSelector);
+        if (root) {
+          const pkgExports = Object.keys(window).reduce<Record<string, any>>(
+            (prev, curr) => {
+              if (curr.startsWith(ANIMA_EXPORTS_WINDOW_KEY)) {
+                const file = curr.replace(ANIMA_EXPORTS_WINDOW_KEY, "");
+                const value = window[curr] ?? [];
 
-              const storyKey = value.filename;
-
-              if (storyKey) {
-                prev["stories"][storyKey] = value;
+                prev[file] = value.map((e) => {
+                  const { isDefault = false, name, key } = e;
+                  if (isDefault && name !== "default") {
+                    return `${key}/${name}`;
+                  }
+                  return key;
+                });
               }
+              return prev;
+            },
+            {}
+          );
 
-              if (value.component) {
-                const packages = Object.keys(value.packages);
+          const metadata = Object.keys(window).reduce<StorybookMetadata>(
+            (prev, curr) => {
+              const storyFileAsKey = curr.replace(ANIMA_STORY_WINDOW_KEY, "");
+              if (curr.startsWith(ANIMA_STORY_WINDOW_KEY)) {
+                const value = {
+                  ...window[curr],
+                  title: sanitize(window[curr]?.title ?? ""),
+                  filename: storyFileAsKey,
+                  packages: window[curr]?.imports ?? {},
+                };
+                delete value?.imports;
 
-                let key: string;
+                const storyKey = value.filename;
 
-                for (const packageKey of packages) {
-                  const pkgs = value.packages[packageKey];
+                if (storyKey) {
+                  prev["stories"][storyKey] = value;
+                }
 
-                  const pkg = pkgs.find((pkg) => pkg.name === value.component);
+                if (value.component) {
+                  const packages = Object.keys(value.packages);
 
-                  if (pkg) {
-                    key = pkg.key;
-                    break;
+                  let key: string;
+
+                  for (const packageKey of packages) {
+                    const pkgs = value.packages[packageKey];
+
+                    const pkg = pkgs.find(
+                      (pkg) => pkg.name === value.component
+                    );
+
+                    if (pkg) {
+                      key = pkg.key;
+                      break;
+                    }
+                  }
+
+                  if (key) {
+                    prev["packages"][key] = storyFileAsKey;
                   }
                 }
+              }
 
-                if (key) {
-                  prev["packages"][key] = value.title || storyFileAsKey;
-                }
+              return prev;
+            },
+            {
+              stories: {},
+              packages: {},
+            } as StorybookMetadata
+          );
+
+          channel.emit(SET_STORYBOOK_META, metadata);
+          const metadataPackages = metadata?.packages || {};
+
+          const animaComments = Array.from(
+            root.querySelectorAll<HTMLSpanElement>("[is-anima]")
+          )
+            .map((e) => e.previousSibling)
+            .filter(
+              (e) =>
+                e?.nodeType === Node.COMMENT_NODE &&
+                !(e as Comment).data.startsWith("anima-metadata")
+            ) as Comment[];
+
+          if (animaComments.length === 0) return;
+
+          for (const animaComment of animaComments) {
+            const data = animaComment.data;
+
+            if (data) {
+              const { componentData } = JSON.parse(data) ?? {};
+              const { pkg, ...rest } = componentData ?? {};
+
+              const getPackageKeys = (pkg: string): string[] => {
+                const keys = [pkg];
+                Object.keys(pkgExports).forEach((key) => {
+                  const values = (pkgExports[key] ?? []) as string[];
+                  if (key === pkg || values.includes(pkg)) {
+                    keys.push(...[key, ...values]);
+                  }
+                });
+                return [...new Set(keys)];
+              };
+
+              const getPkgStoryFile = (pkg: string): string | null => {
+                const keys = getPackageKeys(pkg);
+                const storyFile = keys.find((key) => metadataPackages[key]);
+                return storyFile;
+              };
+
+              const filename = getPkgStoryFile(pkg);
+
+              if (filename) {
+                animaComment.deleteData(0, data.length);
+                animaComment.insertData(
+                  0,
+                  "anima-metadata " +
+                    JSON.stringify({
+                      componentData: {
+                        pkg,
+                        filename,
+                        ...rest,
+                      },
+                    })
+                );
               }
             }
-            if (curr.startsWith(ANIMA_FILE_WINDOW_KEY)) {
-              const fileAsKey = curr.replace(ANIMA_FILE_WINDOW_KEY, "");
-              prev["files"][fileAsKey] = window[curr];
-            }
-            return prev;
-          },
-          {
-            files: {},
-            stories: {},
-            packages: {},
-          } as StorybookMetadata
-        );
-
-        channel.emit(SET_STORYBOOK_META, metadata);
-        const metadataPackages = metadata?.packages || {};
-
-        const animaComments = Array.from(
-          root.querySelectorAll<HTMLSpanElement>("[is-anima]")
-        )
-          .map((e) => e.previousSibling)
-          .filter((e) => e?.nodeType === Node.COMMENT_NODE) as Comment[];
-
-        if (animaComments.length === 0) return;
-
-        for (const animaComment of animaComments) {
-          const data = animaComment.data;
-
-          if (data) {
-            const { componentData } = JSON.parse(data) ?? {};
-            const { pkg, ...rest } = componentData ?? {};
-            const filename = pkg ? metadataPackages[pkg] : null;
-            animaComment.deleteData(0, data.length);
-            animaComment.insertData(
-              0,
-              "anima-metadata " +
-                JSON.stringify({
-                  componentData: {
-                    pkg,
-                    filename,
-                    ...rest,
-                  },
-                })
-            );
           }
         }
+      } catch (error) {
+        console.log(error);
       }
     }, 0);
     return storyFn(context);
