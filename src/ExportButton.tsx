@@ -9,6 +9,7 @@ import {
   Story,
   useArgTypes,
   useParameter,
+  StoriesHash,
 } from "@storybook/api";
 
 import { createStoryRequest, isDocsStory, notify } from "./utils";
@@ -27,6 +28,12 @@ import { AnimaParameters, StorybookMetadata } from "./types";
 import { get } from "lodash";
 import { getStoryPayload } from "./story";
 
+interface dependency {
+  storyId: string;
+  storyFilename: string;
+  componentId: string | null;
+}
+
 const sendEventToParent = (action: string, data: Record<string, any>) => {
   parent.postMessage({ action, source: "anima", data }, "*");
 };
@@ -38,16 +45,19 @@ const handleExportError = (e: any) => {
 
 interface SProps {}
 
-const getStoryDependencies = (story: Story, metadata: StorybookMetadata) => {
+export const getStoryDependencies = (
+  story: Story,
+  metadata: StorybookMetadata,
+  storiesHash: StoriesHash
+) => {
   const dependencies = [];
   const metadataPackages = metadata?.packages || {};
   const metadataStories = metadata?.stories || {};
   // const files = metadata?.files || {};
 
   const storyFile = get(story, "parameters.fileName", null);
-  const storyComponentId = get(story, "componentId", null);
 
-  const entry = metadataStories[storyFile] || metadataStories[storyComponentId];
+  const entry = storyFile ? metadataStories[storyFile] : null;
 
   if (entry) {
     const packagesUsedByStory = Object.keys(entry.packages || {});
@@ -56,7 +66,29 @@ const getStoryDependencies = (story: Story, metadata: StorybookMetadata) => {
     );
   }
 
-  return dependencies;
+  return mapFilenameToStoryId(dependencies, storiesHash).filter(
+    (e) => e.storyId !== story.id
+  );
+};
+
+const mapFilenameToStoryId = (
+  fileNames: string[],
+  storiesHash: StoriesHash
+): dependency[] => {
+  const keys = Object.keys(storiesHash);
+
+  return keys.reduce<dependency[]>((acc, key) => {
+    const story = storiesHash[key] as Story;
+    const fileName = get(story, "parameters.fileName", null);
+    if (story.type === "story" && fileName && fileNames.includes(fileName)) {
+      acc.push({
+        storyId: story.id,
+        storyFilename: fileName,
+        componentId: get(story, "story.componentId", null),
+      });
+    }
+    return acc;
+  }, []);
 };
 
 const doExport = async (args: {
@@ -67,7 +99,7 @@ const doExport = async (args: {
   metadata: StorybookMetadata;
   componentId: string | null;
 }) => {
-  const { api, action, metadata, animaParameters, componentId } = args;
+  const { api, action, metadata, animaParameters, componentId, state } = args;
   const channel = api.getChannel();
   const isMainThread = window.location === window.parent.location;
 
@@ -77,7 +109,8 @@ const doExport = async (args: {
 
   if (action === EXPORT_SINGLE_STORY) {
     const story = api.getCurrentStoryData() as Story;
-    const deps = getStoryDependencies(story, metadata);
+
+    const deps = getStoryDependencies(story, metadata, state.storiesHash);
 
     if (!isDocsStory(story)) {
       channel.emit(EXPORT_SINGLE_STORY, {
@@ -101,7 +134,6 @@ export const ExportButton: React.FC<SProps> = () => {
     message: "",
   });
   const metadata = useRef<StorybookMetadata>({
-    files: {},
     packages: {},
     stories: {},
   });
@@ -111,7 +143,10 @@ export const ExportButton: React.FC<SProps> = () => {
   const animaParams = useRef<AnimaParameters>(null);
 
   useChannel({
-    [SET_AUTH]: ({ isAuthenticated, message = "" }) => {
+    [SET_AUTH]: ({
+      isAuthenticated,
+      message = "Oops! Something went wrong",
+    }) => {
       setAuthState({ isAuthenticated, message });
     },
 

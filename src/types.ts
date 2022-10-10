@@ -14,7 +14,6 @@ export interface DSToken {
 export type DSTokenMap = Record<string, DSToken>;
 
 export interface StorybookMetadata {
-  files: Record<string, any>;
   stories: Record<string, any>;
   packages: Record<string, string>;
 }

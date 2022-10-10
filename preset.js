@@ -3,6 +3,7 @@ const core = require("@storybook/core-common");
 const ZipPlugin = require("./webpack/zip");
 const SourceLoaderPlugin = require("./webpack/sourceLoader");
 const readPkgUp = require("read-pkg-up");
+const { getProjectRoot } = require("./webpack/paths");
 
 const getStorybookConfigDir = (packageJson = {}) => {
   return (
@@ -48,7 +49,7 @@ module.exports = {
         [
           require.resolve("babel-storybook-anima"),
           {
-            projectRoot: core.getProjectRoot(),
+            projectRoot: getProjectRoot(),
             storybookConfigDirectory: getStorybookConfigDir(),
             storybookConfig: await getStorybookMetadata(),
           },
