@@ -3475,10 +3475,10 @@ babel-plugin-react-docgen@^4.2.1:
     lodash "^4.17.15"
     react-docgen "^5.0.0"
 
-babel-storybook-anima@^0.2.0:
-  version "0.2.0"
-  resolved "https://registry.yarnpkg.com/babel-storybook-anima/-/babel-storybook-anima-0.2.0.tgz#6ae05fdd419e40bcccfe75be78e0bbe2228fdd9d"
-  integrity sha512-hT5jdW1pz5SHCk4RUaTP4ERD4Y8Slkxp+9HdL6KrazmT9rx/b0eGGKwnk8ge54oSG72s8XwACG1YWXS9QpQspA==
+babel-storybook-anima@^0.3.0:
+  version "0.3.0"
+  resolved "https://registry.yarnpkg.com/babel-storybook-anima/-/babel-storybook-anima-0.3.0.tgz#3cc730c69cd9c2e506850d516be1a2ccf56c1710"
+  integrity sha512-RmBiJYisN7SUeXXv6QYOoWvIXYN+mcyY9pMBs0550sJ43IXQVPPuUB5CxdP0wSrVOs9iS0kunSACnfbf8P25MQ==
   dependencies:
     "@babel/core" "^7.15.5"
     "@babel/generator" "^7.15.4"
