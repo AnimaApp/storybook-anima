@@ -126,8 +126,9 @@ export const withHTML = makeDecorator({
 
               const getPkgStoryFile = (pkg: string): string | null => {
                 const keys = getPackageKeys(pkg);
-                const storyFile = keys.find((key) => metadataPackages[key]);
-                return storyFile;
+                const storyFileKey = keys.find((key) => metadataPackages[key]);
+                if (!storyFileKey) return null;
+                return metadataPackages[storyFileKey];
               };
 
               const filename = getPkgStoryFile(pkg);
