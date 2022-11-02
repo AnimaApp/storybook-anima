@@ -120,7 +120,7 @@ const doExport = async (args: {
         animaParameters,
       });
     } else {
-      notify("Oups, you can only export components");
+      notify("Oops, you can only export components");
     }
   }
 
