@@ -1,3 +1,5 @@
+> ## :warning: DEPRECATION NOTICE <br /> <br/>This repository is considered deprecated. Please check out our new command line interface tool for continuous integration between Storybook and Figma [storybook-anima-cli](https://github.com/AnimaApp/anima-storybook-cli)<br/>
+
 <div align="center">
   <br/>
   <img src="https://user-images.githubusercontent.com/1323193/153215858-dc6b4ac3-411a-4cf0-8e56-b4460ee339d7.svg" width="280" alt="Storybook to Anima to Figma Addon"/>
@@ -7,8 +9,6 @@
 
   <br/>
 </div>
-
->## :warning: DEPRECATION NOTICE <br /> <br/>This repository is considered deprecated. Please check out our new command line interface tool for continuous integration between Storybook and Figma [storybook-anima-cli](https://github.com/AnimaApp/anima-storybook-cli)<br/>
 
 [Storybook](https://github.com/storybooks/storybook) addon that extracts the Storybook data and transforms stories into Figma components for a better design-development workflow.
 
