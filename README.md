@@ -1,3 +1,5 @@
+> ## :warning: DEPRECATION NOTICE <br /> <br/>This repository is considered deprecated. Please check out our new command line interface tool for continuous integration between Storybook and Figma [storybook-anima-cli](https://github.com/AnimaApp/anima-storybook-cli)<br/>
+
 <div align="center">
   <br/>
   <img src="https://user-images.githubusercontent.com/1323193/153215858-dc6b4ac3-411a-4cf0-8e56-b4460ee339d7.svg" width="280" alt="Storybook to Anima to Figma Addon"/>
@@ -107,7 +109,7 @@ That is it, now if you have components that use these design tokens they will be
 
 For the time being, this integration works best if the your stories composition consists of just the component itself, rather than complex stories with multiple examples or included documentation.
 
-### In short, what you see in the Storybook story, is what you'll get in Figma.
+### In short, what you see in the Storybook story, is what you'll get in Figma
 
 ## Limitations with Boolean control types
 
